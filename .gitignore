@@ -1,0 +1,36 @@
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+build/
+dist/
+
+# Node / Playwright
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Datos de volúmenes locales
+data/
+pgdata/
+evidencias/
+
+# Editores y sistema
+.vscode/
+.idea/
+.DS_Store
+*.swp
