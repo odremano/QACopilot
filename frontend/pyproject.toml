@@ -1,0 +1,32 @@
+[project]
+name = "qa-copilot-frontend"
+version = "0.1.0"
+description = "Interfaz Streamlit de QA Copilot"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "streamlit==1.66.1",
+    "httpx==0.28.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff==0.17.2",
+]
+
+[build-system]
+requires = ["setuptools==84.2.1"]
+build-backend = "setuptools.build_meta"
+
+# El código no se empaqueta: Streamlit lo ejecuta desde /app. pip solo instala las dependencias.
+[tool.setuptools]
+packages = []
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["lib"]

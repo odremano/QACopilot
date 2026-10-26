@@ -1,0 +1,42 @@
+[project]
+name = "qa-copilot-backend"
+version = "0.1.0"
+description = "API REST de QA Copilot"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi==0.162.0",
+    "pydantic==2.14.1",
+    "pydantic-settings==2.16.1",
+    "sqlalchemy==2.1.6",
+    "alembic==1.20.1",
+    "psycopg[binary]==3.3.6",
+    "uvicorn==0.54.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.1.1",
+    "httpx==0.28.1",
+    "ruff==0.17.2",
+]
+
+[build-system]
+requires = ["setuptools==84.2.1"]
+build-backend = "setuptools.build_meta"
+
+# El código no se empaqueta: se ejecuta desde /app. pip solo instala las dependencias.
+[tool.setuptools]
+packages = []
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["playwright"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = ["slow: pruebas lentas (por ejemplo, las que lanzan Playwright)"]
