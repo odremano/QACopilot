@@ -9,7 +9,9 @@ from app.db import Base
 
 config = context.config
 # La URL sale de Settings (variable DATABASE_URL), nunca de alembic.ini.
-config.set_main_option("sqlalchemy.url", settings.database_url.replace("%", "%%"))
+# Solo las pruebas la fijan antes por código, para migrar la base de prueba.
+if not config.get_main_option("sqlalchemy.url"):
+    config.set_main_option("sqlalchemy.url", settings.database_url.replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

@@ -4,7 +4,7 @@ from fastapi import FastAPI
 
 from app.config import settings
 from app.errors import registrar_manejadores
-from app.routers import salud
+from app.routers import historias, salud
 from app.version import VERSION
 
 logging.basicConfig(
@@ -27,4 +27,5 @@ app = FastAPI(
 )
 
 registrar_manejadores(app)
+app.include_router(historias.router)
 app.include_router(salud.router)
