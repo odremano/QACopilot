@@ -24,5 +24,13 @@ else:
     sys.exit("No se pudo conectar con la base de datos.")
 EOF
 
+echo "Aplicando migraciones..."
+alembic upgrade head
+
+if [ "${SEED_EXAMPLES:-true}" = "true" ]; then
+    echo "Cargando historias de ejemplo..."
+    python -m app.seed
+fi
+
 echo "Iniciando la API..."
 exec uvicorn app.main:app --host 0.0.0.0 --port 8000

@@ -36,6 +36,11 @@ extend-exclude = ["playwright"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
+[tool.ruff.lint.isort]
+# La carpeta local alembic/ no es un paquete propio: es la librería.
+known-third-party = ["alembic"]
+known-first-party = ["app"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
