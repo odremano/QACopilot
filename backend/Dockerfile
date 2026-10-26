@@ -7,6 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    NPM_CONFIG_UPDATE_NOTIFIER=false \
     PATH="/opt/venv/bin:$PATH"
 
 # 1) Dependencias del sistema: Python 3.12 de Ubuntu noble + venv.

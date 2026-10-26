@@ -39,3 +39,4 @@ psql: ## Abre psql dentro del contenedor de la base
 
 smoke: ## Spike de Playwright dentro del contenedor del backend
 	$(COMPOSE) exec backend sh -c "cd playwright && npx playwright test smoke"
+	$(COMPOSE) exec backend node -e "const r = require('/data/evidencias/smoke/reporte.json'); console.log('Reporte JSON generado:', JSON.stringify(r.stats))"
