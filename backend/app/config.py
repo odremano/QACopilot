@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     seed_examples: bool = True
     log_level: str = "INFO"
 
+    # Catálogo de pasos del SUT (RF-02); ruta relativa a la carpeta del backend.
+    catalogo_path: str = "catalogo/saucedemo.yaml"
+
     # LLM (se usa a partir de S4; opcional en S3)
     llm_provider: str = "deepseek"
     llm_base_url: str = "https://api.deepseek.com"

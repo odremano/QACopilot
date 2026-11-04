@@ -1,0 +1,192 @@
+# Catálogo de pasos Gherkin permitidos para SauceDemo (RF-02, Anexo D).
+#
+# - patron: texto del paso sin la palabra clave (Dado, Cuando, Entonces, Y, Pero).
+#   Admite como máximo un parámetro, escrito entre comillas: "{texto}".
+# - plantilla: código Playwright (TypeScript) del paso. Al exportar (RF-06), {texto} se
+#   reemplaza por el valor del caso escapado como literal de cadena; el LLM nunca escribe código.
+#
+# Selectores verificados contra https://www.saucedemo.com el 04/11/2026.
+# Si este archivo es inválido, el backend no inicia.
+
+sut: saucedemo
+base_url: https://www.saucedemo.com
+version: 1
+
+pasos:
+  # --- Inicio de sesión ---------------------------------------
+  - id: abrir_login
+    grupo: inicio de sesión
+    patron: que estoy en la página de inicio de sesión
+    plantilla: |-
+      await page.goto('/');
+
+  - id: ingresar_usuario
+    grupo: inicio de sesión
+    patron: ingreso el usuario "{texto}"
+    plantilla: |-
+      await page.locator('[data-test="username"]').fill({texto});
+
+  - id: ingresar_clave
+    grupo: inicio de sesión
+    patron: ingreso la contraseña "{texto}"
+    plantilla: |-
+      await page.locator('[data-test="password"]').fill({texto});
+
+  - id: presionar_ingresar
+    grupo: inicio de sesión
+    patron: presiono el botón de ingresar
+    plantilla: |-
+      await page.locator('[data-test="login-button"]').click();
+
+  - id: iniciar_sesion_como
+    grupo: inicio de sesión
+    patron: que inicié sesión como "{texto}"
+    plantilla: |-
+      await page.goto('/');
+      await page.locator('[data-test="username"]').fill({texto});
+      await page.locator('[data-test="password"]').fill('secret_sauce');
+      await page.locator('[data-test="login-button"]').click();
+      await expect(page.locator('[data-test="inventory-container"]')).toBeVisible();
+
+  - id: ver_login
+    grupo: inicio de sesión
+    patron: veo la página de inicio de sesión
+    plantilla: |-
+      await expect(page.locator('[data-test="login-button"]')).toBeVisible();
+
+  # --- Inventario ---------------------------------------------
+  - id: ver_productos
+    grupo: inventario
+    patron: veo el listado de productos
+    plantilla: |-
+      await expect(page.locator('[data-test="inventory-container"]')).toBeVisible();
+
+  - id: ordenar_productos
+    grupo: inventario
+    patron: ordeno los productos por "{texto}"
+    plantilla: |-
+      await page.locator('[data-test="product-sort-container"]').selectOption({ label: {texto} });
+
+  - id: ver_primer_producto
+    grupo: inventario
+    patron: veo "{texto}" como primer producto
+    plantilla: |-
+      await expect(page.locator('[data-test="inventory-item-name"]').first()).toHaveText({texto});
+
+  # --- Carrito ------------------------------------------------
+  - id: agregar_producto
+    grupo: carrito
+    patron: agrego al carrito el producto "{texto}"
+    plantilla: |-
+      await page.locator('[data-test="inventory-item"]').filter({ hasText: {texto} }).getByRole('button', { name: 'Add to cart' }).click();
+
+  - id: quitar_producto
+    grupo: carrito
+    patron: quito del carrito el producto "{texto}"
+    plantilla: |-
+      await page.locator('[data-test="inventory-item"]').filter({ hasText: {texto} }).getByRole('button', { name: 'Remove' }).click();
+
+  - id: ver_cantidad_carrito
+    grupo: carrito
+    patron: veo "{texto}" en el ícono del carrito
+    plantilla: |-
+      await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText({texto});
+
+  - id: ver_icono_carrito_vacio
+    grupo: carrito
+    patron: veo el ícono del carrito sin productos
+    plantilla: |-
+      await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveCount(0);
+
+  - id: abrir_carrito
+    grupo: carrito
+    patron: abro el carrito
+    plantilla: |-
+      await page.locator('[data-test="shopping-cart-link"]').click();
+
+  - id: ver_producto_en_carrito
+    grupo: carrito
+    patron: veo el producto "{texto}" en el carrito
+    plantilla: |-
+      await expect(page.locator('[data-test="cart-list"]')).toContainText({texto});
+
+  - id: no_ver_producto_en_carrito
+    grupo: carrito
+    patron: no veo el producto "{texto}" en el carrito
+    plantilla: |-
+      await expect(page.locator('[data-test="cart-list"]')).not.toContainText({texto});
+
+  - id: seguir_comprando
+    grupo: carrito
+    patron: presiono el botón de seguir comprando
+    plantilla: |-
+      await page.locator('[data-test="continue-shopping"]').click();
+
+  # --- Checkout -----------------------------------------------
+  - id: iniciar_checkout
+    grupo: checkout
+    patron: presiono el botón de checkout
+    plantilla: |-
+      await page.locator('[data-test="checkout"]').click();
+
+  - id: ingresar_nombre
+    grupo: checkout
+    patron: ingreso el nombre "{texto}"
+    plantilla: |-
+      await page.locator('[data-test="firstName"]').fill({texto});
+
+  - id: ingresar_apellido
+    grupo: checkout
+    patron: ingreso el apellido "{texto}"
+    plantilla: |-
+      await page.locator('[data-test="lastName"]').fill({texto});
+
+  - id: ingresar_codigo_postal
+    grupo: checkout
+    patron: ingreso el código postal "{texto}"
+    plantilla: |-
+      await page.locator('[data-test="postalCode"]').fill({texto});
+
+  - id: continuar_checkout
+    grupo: checkout
+    patron: presiono el botón de continuar
+    plantilla: |-
+      await page.locator('[data-test="continue"]').click();
+
+  - id: ver_total
+    grupo: checkout
+    patron: veo el total "{texto}"
+    plantilla: |-
+      await expect(page.locator('[data-test="total-label"]')).toContainText({texto});
+
+  - id: finalizar_compra
+    grupo: checkout
+    patron: presiono el botón de finalizar
+    plantilla: |-
+      await page.locator('[data-test="finish"]').click();
+
+  - id: ver_confirmacion
+    grupo: checkout
+    patron: veo la confirmación de la compra
+    plantilla: |-
+      await expect(page.locator('[data-test="complete-header"]')).toHaveText('Thank you for your order!');
+
+  # --- General ------------------------------------------------
+  - id: ver_error
+    grupo: general
+    patron: veo el mensaje de error "{texto}"
+    plantilla: |-
+      await expect(page.locator('[data-test="error"]')).toContainText({texto});
+
+  - id: ver_titulo
+    grupo: general
+    patron: veo el título "{texto}"
+    plantilla: |-
+      await expect(page.locator('[data-test="title"]')).toHaveText({texto});
+
+  - id: cerrar_sesion
+    grupo: general
+    patron: cierro la sesión
+    plantilla: |-
+      await page.getByRole('button', { name: 'Open Menu' }).click();
+      await page.locator('[data-test="logout-sidebar-link"]').click();

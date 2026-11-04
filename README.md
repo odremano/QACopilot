@@ -95,13 +95,13 @@ Para empezar de cero (borrando los datos): `docker compose down -v`.
 │   │   ├── routers/          # endpoints HTTP
 │   │   ├── services/         # lógica de negocio
 │   │   └── seed.py           # historias de ejemplo (idempotente)
+│   ├── catalogo/             # catálogo de pasos de SauceDemo (YAML versionado, RF-02)
 │   ├── playwright/           # proyecto Playwright (smoke en S3, runner en S5)
 │   └── tests/                # pytest contra PostgreSQL real
 ├── frontend/
 │   ├── Inicio.py             # punto de entrada y navegación
 │   ├── paginas/              # Panel, Historias, Detalle, Ejecuciones, Catálogo, Acerca de
 │   └── lib/                  # api.py (cliente HTTP único), formato y rutas
-├── catalogo/                 # catálogo de pasos de SauceDemo (S4)
 └── docs/                     # spec, bitácora, guía de despliegue y UML
 ```
 
@@ -110,7 +110,7 @@ Para empezar de cero (borrando los datos): `docker compose down -v`.
 | Semana | Objetivo | Estado |
 |---|---|---|
 | S3 | Repositorio, Docker Compose, modelo de datos, historias (RF-01), esqueleto de pantallas, spike de Playwright, UML iniciales | ✅ Hecho |
-| S4 | Catálogo de pasos, integración con DeepSeek, generación, validación y revisión humana | Pendiente |
+| S4 | Catálogo de pasos, integración con DeepSeek, generación, validación y revisión humana | En curso (catálogo ✅) |
 | S5 | Generador TypeScript, runner de Playwright, resultados con capturas | Pendiente |
 | S6 | Panel y reportes, modo demo, regeneración, historial, Cloudflare Access y límite diario | Pendiente |
 | S7 | Pruebas, corrección de errores, presentaciones y demo pregrabada | Pendiente |

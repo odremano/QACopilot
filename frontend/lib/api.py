@@ -101,6 +101,10 @@ def editar_historia(historia_id: int, datos: dict) -> dict:
     return _pedir("PUT", f"/historias/{historia_id}", json=datos)
 
 
+def obtener_catalogo() -> dict:
+    return _pedir("GET", "/catalogo")
+
+
 def salud() -> dict:
     # 503 trae el cuerpo con estado "degradado": se devuelve igual para mostrarlo.
     return _pedir("GET", "/salud", aceptar=(503,))
