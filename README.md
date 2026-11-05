@@ -15,11 +15,11 @@ flowchart LR
     nav["Navegador"] -->|"HTTPS<br/>Cloudflare Tunnel + Access"| fe["Frontend<br/>Streamlit"]
     fe -->|"REST/JSON"| be["Backend (FastAPI)<br/>API REST + OpenAPI (/docs)<br/>Servicio de generación IA<br/>Validador Gherkin/catálogo<br/>Generador de código (TS)<br/>Runner Playwright (Node)"]
     be -->|SQL| db[("PostgreSQL")]
-    be -->|HTTPS| llm["API LLM<br/>DeepSeek / Ollama"]
+    be -->|HTTPS| llm["API LLM<br/>OpenRouter (DeepSeek)"]
     be -->|HTTPS| sut["SauceDemo"]
 ```
 
-Más diagramas en [`docs/uml/`](docs/uml/): [casos de uso](docs/uml/casos-de-uso.md), [clases](docs/uml/clases.md), [estados del caso](docs/uml/estados-caso.md) y [despliegue](docs/uml/despliegue.md).
+Más diagramas en [`docs/uml/`](docs/uml/): [casos de uso](docs/uml/casos-de-uso.md), [clases](docs/uml/clases.md), [estados del caso](docs/uml/estados-caso.md), [secuencia de generación y revisión](docs/uml/secuencia-generacion.md) y [despliegue](docs/uml/despliegue.md).
 
 ## Stack
 
@@ -76,6 +76,38 @@ Todos operan vía `docker compose` sobre los contenedores en ejecución (salvo `
 
 Para empezar de cero (borrando los datos): `docker compose down -v`.
 
+## LLM
+
+La generación usa un proveedor compatible con la API de OpenAI y se configura en `.env` con las variables de `.env.example`:
+
+- `LLM_PROVIDER=openrouter` y `LLM_API_KEY` usan OpenRouter con DeepSeek.
+- `LLM_PROVIDER=deepseek` usa la API directa de DeepSeek.
+- `LLM_PROVIDER=demo` devuelve respuestas pregrabadas para las tres historias de ejemplo y no necesita clave.
+- `LLM_DAILY_LIMIT` limita las generaciones por día (RNF-08). El valor 0 significa sin límite.
+
+La clave solo va en `.env` o en las variables de Dokploy. Nunca se versiona.
+
+## Catálogo de pasos
+
+`backend/catalogo/saucedemo.yaml` es la lista cerrada de pasos que puede usar un caso (RF-02). Cada paso tiene:
+
+| Campo | Qué es |
+|---|---|
+| `id` | Identificador único en snake_case. |
+| `grupo` | Pantalla del SUT a la que pertenece el paso. Agrupa el catálogo en el prompt y en la pantalla Catálogo. |
+| `patron` | Texto del paso sin la palabra clave (Dado, Cuando, Entonces, Y o Pero). Admite como máximo un parámetro, escrito `"{texto}"` y entre comillas. |
+| `plantilla` | Código Playwright que se genera al exportar. `{texto}` se reemplaza por el valor del caso escapado como literal. |
+
+El bloque `contexto` lleva los datos reales del SUT (usuarios, mensajes, productos) que el prompt le pasa al LLM.
+
+Para agregar o cambiar un paso:
+
+1. Verificá el selector en la aplicación.
+2. Editá el YAML y subí `version`.
+3. Corré `make test` y reconstruí el backend con `docker compose up --build -d backend`. El catálogo se carga al iniciar el backend, y si el archivo es inválido el backend no arranca y registra el motivo.
+
+El catálogo no se edita desde la interfaz (spec 3.3).
+
 ## Estructura del repositorio
 
 ```
@@ -96,6 +128,8 @@ Para empezar de cero (borrando los datos): `docker compose down -v`.
 │   │   ├── services/         # lógica de negocio
 │   │   └── seed.py           # historias de ejemplo (idempotente)
 │   ├── catalogo/             # catálogo de pasos de SauceDemo (YAML versionado, RF-02)
+│   ├── prompts/              # prompt de sistema versionado (v1.md)
+│   ├── demo/                 # respuestas pregrabadas del modo demo
 │   ├── playwright/           # proyecto Playwright (smoke en S3, runner en S5)
 │   └── tests/                # pytest contra PostgreSQL real
 ├── frontend/
@@ -110,9 +144,9 @@ Para empezar de cero (borrando los datos): `docker compose down -v`.
 | Semana | Objetivo | Estado |
 |---|---|---|
 | S3 | Repositorio, Docker Compose, modelo de datos, historias (RF-01), esqueleto de pantallas, spike de Playwright, UML iniciales | ✅ Hecho |
-| S4 | Catálogo de pasos, integración con DeepSeek, generación, validación y revisión humana | En curso (catálogo ✅) |
+| S4 | Catálogo de pasos, integración con DeepSeek (vía OpenRouter), generación, validación y revisión humana | ✅ Hecho |
 | S5 | Generador TypeScript, runner de Playwright, resultados con capturas | Pendiente |
-| S6 | Panel y reportes, modo demo, regeneración, historial, Cloudflare Access y límite diario | Pendiente |
+| S6 | Panel y reportes, modo demo, regeneración, historial, Cloudflare Access y límite diario | Pendiente (Cloudflare Access, límite diario, modo demo y regeneración adelantados en S4) |
 | S7 | Pruebas, corrección de errores, presentaciones y demo pregrabada | Pendiente |
 | S8 | Verificación final y defensa (26/11/2026) | Pendiente |
 
@@ -124,6 +158,6 @@ Tal como pide la cátedra, se declaran las herramientas de IA utilizadas:
 
 | Uso | Herramienta | Finalidad |
 |---|---|---|
-| Componente del producto | DeepSeek (API) / Ollama | Proponer casos de prueba, siempre sujetos a validación automática y aprobación humana. |
+| Componente del producto | DeepSeek vía OpenRouter (`deepseek/deepseek-v4.1-flash-1017`) | Proponer casos de prueba, siempre sujetos a validación automática y aprobación humana. |
 | Asistencia en el desarrollo | Claude (Anthropic) | Análisis de requisitos y redacción de la especificación. |
 | Asistencia en el desarrollo | Claude Code | Asistente de código: estructura del proyecto, implementación guiada por la especificación, pruebas y documentación, con revisión del autor. |
