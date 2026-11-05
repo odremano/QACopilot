@@ -21,7 +21,7 @@ sequenceDiagram
     GEN->>DB: historia y generaciones del día
     alt la historia no existe
         GEN-->>FE: 404 {"detalle"}
-    else se alcanzó LLM_DAILY_LIMIT (RNF-08)
+    else se alcanzó DAILY_GENERATION_LIMIT (RNF-08)
         GEN-->>FE: 429 {"detalle"}
     end
     Note over GEN: prompt v1 = reglas + catálogo<br/>agrupado + contexto del SUT + ejemplo

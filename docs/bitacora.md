@@ -82,7 +82,7 @@ Se completa al cierre de cada semana del plan de trabajo (spec, sección 11).
   - Cada generación queda registrada en `generacion` con los intentos crudos, la duración y el error, también las fallidas.
   - Una generación real tarda entre 6 y 12 s y produce unos 7 casos válidos por historia.
 - **Adelantos de S6:**
-  - Límite diario de generaciones (RNF-08, `LLM_DAILY_LIMIT`, responde 429).
+  - Límite diario de generaciones (RNF-08, `DAILY_GENERATION_LIMIT`, responde 429).
   - Modo demo (`LLM_PROVIDER=demo`) con respuestas pregrabadas de las tres historias de ejemplo en `backend/demo/`.
   - Regeneración que reemplaza los casos pendientes y conserva los aprobados y descartados (base de RF-11).
 - **RF-05:**
