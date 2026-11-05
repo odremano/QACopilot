@@ -83,7 +83,7 @@ La generación usa un proveedor compatible con la API de OpenAI y se configura e
 - `LLM_PROVIDER=openrouter` y `LLM_API_KEY` usan OpenRouter con DeepSeek.
 - `LLM_PROVIDER=deepseek` usa la API directa de DeepSeek.
 - `LLM_PROVIDER=demo` devuelve respuestas pregrabadas para las tres historias de ejemplo y no necesita clave.
-- `LLM_DAILY_LIMIT` limita las generaciones por día (RNF-08). El valor 0 significa sin límite.
+- `DAILY_GENERATION_LIMIT` limita las generaciones por día (RNF-08). El valor 0 significa sin límite.
 
 La clave solo va en `.env` o en las variables de Dokploy. Nunca se versiona.
 
