@@ -48,7 +48,7 @@ app = FastAPI(
         {"name": "Historias", "description": "Gestión de historias de usuario (RF-01)."},
         {
             "name": "Casos",
-            "description": "Generación con IA y validación de casos de prueba (RF-03, RF-04).",
+            "description": "Generación con IA, validación y revisión de casos (RF-03 a RF-05).",
         },
         {"name": "Catálogo", "description": "Pasos Gherkin permitidos para el SUT (RF-02)."},
         {"name": "Salud", "description": "Estado del servicio y de sus dependencias."},

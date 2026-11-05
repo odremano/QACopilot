@@ -1,7 +1,8 @@
 import streamlit as st
 
 from lib import api
-from lib.formato import etiqueta_caso, etiqueta_historia, fecha
+from lib.formato import etiqueta_historia, fecha
+from lib.vista_casos import mostrar_caso
 
 st.set_page_config(page_title="QA Copilot", layout="wide")
 
@@ -132,14 +133,13 @@ if boton.button(etiqueta, type="primary", key="generar"):
 
 if not casos:
     st.info("Esta historia todavía no tiene casos de prueba.")
+else:
+    st.caption(
+        "Revisá cada caso: aprobá los correctos, descartá los que no sirven y editá los que "
+        "necesiten ajustes (se revalidan al guardar). Solo los aprobados se exportan."
+    )
 for caso in casos:
-    with st.expander(etiqueta_caso(caso), expanded=not caso["valido"]):
-        st.code(caso["gherkin"], language="gherkin")
-        if caso["errores_validacion"]:
-            st.error(
-                "**El caso no es válido:**\n"
-                + "\n".join(f"- {error}" for error in caso["errores_validacion"])
-            )
+    mostrar_caso(caso)
 
 st.divider()
 PROXIMAMENTE = [
