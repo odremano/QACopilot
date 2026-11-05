@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Identity, Integer, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, Identity, Index, Integer, String, Text, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -16,7 +16,16 @@ if TYPE_CHECKING:
 
 class Ejecucion(Base):
     __tablename__ = "ejecucion"
-    __table_args__ = (check_valores("estado", EstadoEjecucion),)
+    __table_args__ = (
+        check_valores("estado", EstadoEjecucion),
+        # Una sola ejecución en curso a la vez (RF-07, RNF-09), garantizado por la base.
+        Index(
+            "ux_ejecucion_una_en_curso",
+            "estado",
+            unique=True,
+            postgresql_where=text(f"estado = '{EstadoEjecucion.EN_CURSO.value}'"),
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Identity(), primary_key=True)
     historia_id: Mapped[int] = mapped_column(

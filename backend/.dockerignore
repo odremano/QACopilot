@@ -6,3 +6,5 @@ __pycache__/
 playwright/node_modules/
 playwright/test-results/
 playwright/playwright-report/
+playwright/ejecuciones/
+playwright/_tsc_*/
