@@ -6,11 +6,18 @@ arranque se aborta con el error registrado (CA-02).
 
 import re
 from pathlib import Path
-from typing import Annotated, Self
+from typing import Annotated, Any, NamedTuple, Self
 
 import yaml
 from fastapi import Depends, Request
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    PrivateAttr,
+    ValidationError,
+    model_validator,
+)
 
 PARAMETRO = "{texto}"
 GRUPOS_OBLIGATORIOS = ("inicio de sesión", "inventario", "carrito", "checkout")
@@ -48,6 +55,12 @@ class PasoCatalogo(BaseModel):
         return self
 
 
+class Coincidencia(NamedTuple):
+    paso: PasoCatalogo
+    valor: str | None
+    """Valor del parámetro "{texto}" tal como lo escribió el caso, o None si el paso no tiene."""
+
+
 class Catalogo(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -55,6 +68,22 @@ class Catalogo(BaseModel):
     base_url: str = Field(min_length=1)
     version: int = Field(ge=1)
     pasos: list[PasoCatalogo] = Field(min_length=1)
+
+    _expresiones: list[tuple[re.Pattern[str], PasoCatalogo]] = PrivateAttr(default_factory=list)
+
+    def model_post_init(self, _contexto: Any) -> None:
+        self._expresiones = [(_expresion(paso.patron), paso) for paso in self.pasos]
+
+    def coincidir(self, texto: str) -> Coincidencia | None:
+        """Paso del catálogo que coincide con el texto de un paso (sin la palabra clave).
+
+        No distingue mayúsculas ni cantidad de espacios; el valor del parámetro se devuelve
+        sin modificar. Lo usan el validador (RF-04) y el exportador (RF-06).
+        """
+        for expresion, paso in self._expresiones:
+            if encontrado := expresion.fullmatch(texto.strip()):
+                return Coincidencia(paso, encontrado.group(1) if encontrado.groups() else None)
+        return None
 
     @model_validator(mode="after")
     def reglas_del_catalogo(self) -> Self:
@@ -67,6 +96,17 @@ class Catalogo(BaseModel):
         return self
 
 
+def _expresion(patron: str) -> re.Pattern[str]:
+    """Regex del patrón: el parámetro acepta cualquier texto entre comillas (incluso vacío)."""
+    partes = patron.split(f'"{PARAMETRO}"')
+    return re.compile('"([^"]*)"'.join(_literal_flexible(p) for p in partes), re.IGNORECASE)
+
+
+def _literal_flexible(texto: str) -> str:
+    trozos = re.split(r"(\s+)", texto)
+    return "".join(r"\s+" if t.isspace() else re.escape(t) for t in trozos if t)
+
+
 def _sin_duplicados(valores: list[str], mensaje: str) -> None:
     vistos: set[str] = set()
     for valor in valores:
@@ -75,7 +115,7 @@ def _sin_duplicados(valores: list[str], mensaje: str) -> None:
         vistos.add(valor)
 
 
-def _describir(error: ValidationError) -> str:
+def describir_validacion(error: ValidationError) -> str:
     lineas = []
     for detalle in error.errors():
         ubicacion = "".join(
@@ -101,7 +141,9 @@ def cargar_catalogo(ruta: str | Path) -> Catalogo:
     try:
         return Catalogo.model_validate(datos)
     except ValidationError as exc:
-        raise CatalogoInvalido(f"El catálogo {ruta} es inválido: {_describir(exc)}") from exc
+        raise CatalogoInvalido(
+            f"El catálogo {ruta} es inválido: {describir_validacion(exc)}"
+        ) from exc
 
 
 def get_catalogo(request: Request) -> Catalogo:

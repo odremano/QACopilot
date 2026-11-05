@@ -12,6 +12,7 @@ dependencies = [
     "psycopg[binary]==3.3.6",
     "uvicorn==0.54.0",
     "pyyaml==6.0.3",
+    "gherkin-official==42.0.1",
 ]
 
 [project.optional-dependencies]

@@ -16,7 +16,7 @@ Guía para desplegar QA Copilot en el servidor propio (Proxmox + Dokploy) como a
 1. **Projects → Create Project** (por ejemplo, `qa-copilot`).
 2. Dentro del proyecto: **Create Service → Compose**.
 3. En **General**:
-   - Provider: **GitHub**; repositorio `qa-copilot`; rama `main`.
+   - Provider: **GitHub**; repositorio `odremano/QACopilot`; rama `main`.
    - Compose Path: `./docker-compose.yml`.
    - Compose Type: **Docker Compose**.
 4. No hace falta configurar **Domains** en Dokploy: el tráfico entra por Cloudflare Tunnel a los puertos publicados. El compose no usa `container_name`, así que no hay conflictos de nombres.
@@ -57,7 +57,7 @@ Notas:
 - `API_BASE_URL` siempre apunta a la red interna (`http://backend:8000`). `API_PUBLIC_URL` es solo el enlace a `/docs` que muestra la pantalla "Acerca de".
 - `LLM_API_KEY` vive solo en Dokploy: nunca se versiona ni llega al frontend (RNF-06).
 
-Después, **Deploy**. El primer build tarda varios minutos porque descarga la imagen de Playwright (~2 GB). Para seguir el avance, mirá la pestaña **Logs**, donde tienen que aparecer "Aplicando migraciones...", "Se cargaron 3 historias de ejemplo." e "Iniciando la API...".
+Después, **Deploy**. El primer build tarda varios minutos porque descarga la imagen de Playwright (~2 GB). Para seguir el avance, mirá la pestaña **Logs**, donde tienen que aparecer "Aplicando migraciones...", "Se cargaron 3 historias de ejemplo.", "Iniciando la API..." y "Catálogo 'saucedemo' v1 cargado con N pasos". Si el catálogo es inválido, el backend no inicia y el error aparece en estos logs.
 
 ## 4. Cloudflare Tunnel
 
@@ -78,10 +78,11 @@ Si agregás o cambiás el subdominio de la API, actualizá `API_PUBLIC_URL` en D
 
 - [ ] En Dokploy, los tres contenedores aparecen *running* y `backend` y `frontend` en estado *healthy*.
 - [ ] `https://<api>.ordema.app/salud` responde `{"estado": "ok", "base_de_datos": "ok", ...}`.
-- [ ] `https://<api>.ordema.app/docs` muestra Swagger con las secciones "Historias" y "Salud".
+- [ ] `https://<api>.ordema.app/` redirige a `/docs`, que muestra Swagger con las secciones "Historias", "Catálogo" y "Salud".
 - [ ] `https://<frontend>.ordema.app` abre el Panel con **3 historias**.
 - [ ] En **Historias**, dar de alta una historia nueva: aparece en el listado con su código `HU-n`.
 - [ ] Intentar guardar sin título: aparece "El título es obligatorio." y no se guarda.
+- [ ] **Catálogo** lista los pasos de SauceDemo agrupados (inicio de sesión, inventario, carrito, checkout).
 - [ ] **Acerca de** muestra la base "OK" y el enlace a `/docs` apunta al subdominio público.
 - [ ] Opcional: desde la terminal del servidor, `docker exec <contenedor-backend> sh -c "cd playwright && npx playwright test smoke"` pasa (Chromium funciona en el servidor).
 
