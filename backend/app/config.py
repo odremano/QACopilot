@@ -14,10 +14,10 @@ class Settings(BaseSettings):
     # Catálogo de pasos del SUT (RF-02); ruta relativa a la carpeta del backend.
     catalogo_path: str = "catalogo/saucedemo.yaml"
 
-    # LLM (se usa a partir de S4; opcional en S3)
-    llm_provider: str = "deepseek"
-    llm_base_url: str = "https://api.deepseek.com"
-    llm_model: str = "deepseek-chat"
+    # LLM (RF-03): openrouter o deepseek (API compatible con OpenAI) o demo (RF-10).
+    llm_provider: str = "openrouter"
+    llm_base_url: str = "https://openrouter.ai/api/v1"
+    llm_model: str = "deepseek/deepseek-v4.1-flash-1017"
     llm_api_key: SecretStr | None = None
     daily_generation_limit: int = 30
 

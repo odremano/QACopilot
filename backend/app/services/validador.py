@@ -1,9 +1,10 @@
 """Validación de los casos de prueba (RF-04 / CA-04).
 
 Tres niveles: el esquema JSON de la respuesta del LLM (Pydantic), la sintaxis Gherkin
-(parser oficial) y la pertenencia de cada paso al catálogo. Una respuesta que no cumple el
-esquema es un error de la generación (se reintenta); un caso con Gherkin o pasos inválidos
-se guarda igual, marcado como inválido y con el detalle de sus errores.
+(parser oficial) y la pertenencia de cada paso al catálogo. El LLM devuelve título, tipo y
+lista de pasos (Anexo B); el sistema arma el «Escenario:» y lo valida. Una respuesta que no
+cumple el esquema es un error de la generación (se reintenta); un caso con Gherkin o pasos
+inválidos se guarda igual, marcado como inválido y con el detalle de sus errores.
 """
 
 import re
@@ -39,7 +40,7 @@ class CasoPropuesto(BaseModel):
 
     titulo: str = Field(min_length=1, max_length=200)
     tipo: TipoCaso
-    gherkin: str = Field(min_length=1)
+    pasos: list[str] = Field(min_length=1)
 
     @field_validator("tipo", mode="before")
     @classmethod
@@ -48,6 +49,10 @@ class CasoPropuesto(BaseModel):
         if isinstance(valor, str):
             return valor.strip().casefold().replace("í", "i")
         return valor
+
+    @property
+    def gherkin(self) -> str:
+        return armar_gherkin(self.titulo, self.pasos)
 
 
 class RespuestaModelo(BaseModel):
@@ -90,6 +95,12 @@ def validar_respuesta(contenido: str, catalogo: Catalogo) -> list[CasoValidado]:
         )
         for caso in respuesta.casos
     ]
+
+
+def armar_gherkin(titulo: str, pasos: list[str]) -> str:
+    """Texto que se guarda en caso_prueba.gherkin: un escenario con un paso por línea."""
+    titulo = " ".join(titulo.split())
+    return f"Escenario: {titulo}\n" + "".join(f"  {paso.strip()}\n" for paso in pasos)
 
 
 def validar_gherkin(texto: str, catalogo: Catalogo) -> list[str]:

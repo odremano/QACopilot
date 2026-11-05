@@ -13,12 +13,12 @@ dependencies = [
     "uvicorn==0.54.0",
     "pyyaml==6.0.3",
     "gherkin-official==42.0.1",
+    "httpx==0.28.1",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest==9.1.1",
-    "httpx==0.28.1",
     "ruff==0.17.2",
 ]
 

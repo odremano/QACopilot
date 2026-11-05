@@ -40,12 +40,12 @@ FRONTEND_PORT=<puerto libre, p. ej. 18501>
 SEED_EXAMPLES=true
 LOG_LEVEL=INFO
 
-# A partir de S4:
-# LLM_PROVIDER=deepseek
-# LLM_BASE_URL=https://api.deepseek.com
-# LLM_MODEL=deepseek-chat
-# LLM_API_KEY=<clave de DeepSeek>
-# DAILY_GENERATION_LIMIT=30
+# LLM (RF-03): DeepSeek a través de OpenRouter. Con LLM_PROVIDER=demo no hace falta clave.
+LLM_PROVIDER=openrouter
+LLM_BASE_URL=https://openrouter.ai/api/v1
+LLM_MODEL=deepseek/deepseek-v4.1-flash-1017
+LLM_API_KEY=<clave de OpenRouter>
+DAILY_GENERATION_LIMIT=30
 # A partir de S5:
 # SUT_BASE_URL=https://www.saucedemo.com
 ```
@@ -56,6 +56,8 @@ Notas:
 - Si la contraseña tiene caracteres especiales (`@`, `:`, `/`, `%`), codificalos en `DATABASE_URL` (por ejemplo, `@` → `%40`), o usá una contraseña alfanumérica.
 - `API_BASE_URL` siempre apunta a la red interna (`http://backend:8000`). `API_PUBLIC_URL` es solo el enlace a `/docs` que muestra la pantalla "Acerca de".
 - `LLM_API_KEY` vive solo en Dokploy: nunca se versiona ni llega al frontend (RNF-06).
+- Conviene ponerle a la clave un límite de crédito en OpenRouter (**Keys → Credit limit**): junto con `DAILY_GENERATION_LIMIT` y Cloudflare Access acota el gasto máximo.
+- Para la defensa, `LLM_PROVIDER=demo` genera casos para las 3 historias de ejemplo con respuestas pregrabadas, sin llamar al proveedor (RF-10).
 
 Después, **Deploy**. El primer build tarda varios minutos porque descarga la imagen de Playwright (~2 GB). Para seguir el avance, mirá la pestaña **Logs**, donde tienen que aparecer "Aplicando migraciones...", "Se cargaron 3 historias de ejemplo.", "Iniciando la API..." y "Catálogo 'saucedemo' v1 cargado con N pasos". Si el catálogo es inválido, el backend no inicia y el error aparece en estos logs.
 
@@ -82,6 +84,7 @@ Si agregás o cambiás el subdominio de la API, actualizá `API_PUBLIC_URL` en D
 - [ ] `https://<frontend>.ordema.app` abre el Panel con **3 historias**.
 - [ ] En **Historias**, dar de alta una historia nueva: aparece en el listado con su código `HU-n`.
 - [ ] Intentar guardar sin título: aparece "El título es obligatorio." y no se guarda.
+- [ ] En **Detalle de historia**, "Generar casos con IA" crea entre 3 y 8 casos pendientes y `/salud` muestra `"configurado": true`.
 - [ ] **Catálogo** lista los pasos de SauceDemo agrupados (inicio de sesión, inventario, carrito, checkout).
 - [ ] **Acerca de** muestra la base "OK" y el enlace a `/docs` apunta al subdominio público.
 - [ ] Opcional: desde la terminal del servidor, `docker exec <contenedor-backend> sh -c "cd playwright && npx playwright test smoke"` pasa (Chromium funciona en el servidor).

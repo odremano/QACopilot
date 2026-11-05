@@ -12,6 +12,25 @@ sut: saucedemo
 base_url: https://www.saucedemo.com
 version: 1
 
+# Datos de SauceDemo para el prompt (RF-03), verificados contra el código de la aplicación el
+# 05/11/2026. Los valores van en inglés, tal como los muestra la aplicación.
+contexto: |-
+  Usuarios: standard_user (normal), locked_out_user (bloqueado), problem_user, performance_glitch_user, error_user, visual_user. Contraseña de todos: secret_sauce.
+  Mensajes de error del inicio de sesión:
+  - "Epic sadface: Username is required"
+  - "Epic sadface: Password is required"
+  - "Epic sadface: Username and password do not match any user in this service"
+  - "Epic sadface: Sorry, this user has been locked out."
+  Mensajes de error del checkout:
+  - "Error: First Name is required"
+  - "Error: Last Name is required"
+  - "Error: Postal Code is required"
+  Productos y precios: "Sauce Labs Backpack" ($29.99), "Sauce Labs Bike Light" ($9.99), "Sauce Labs Bolt T-Shirt" ($15.99), "Sauce Labs Fleece Jacket" ($49.99), "Sauce Labs Onesie" ($7.99), "Test.allTheThings() T-Shirt (Red)" ($15.99).
+  Opciones de orden y primer producto resultante: "Name (A to Z)" → "Sauce Labs Backpack"; "Name (Z to A)" → "Test.allTheThings() T-Shirt (Red)"; "Price (low to high)" → "Sauce Labs Onesie"; "Price (high to low)" → "Sauce Labs Fleece Jacket".
+  Títulos de página: "Products", "Your Cart", "Checkout: Your Information", "Checkout: Overview", "Checkout: Complete!".
+  El total del checkout suma un impuesto del 8 % redondeado a centavos. Ejemplos: solo "Sauce Labs Backpack" → "Total: $32.39"; "Sauce Labs Backpack" y "Sauce Labs Bike Light" → "Total: $43.18".
+  El contador del carrito muestra la cantidad como número ("1", "2"); sin productos no se muestra.
+
 pasos:
   # --- Inicio de sesión ---------------------------------------
   - id: abrir_login

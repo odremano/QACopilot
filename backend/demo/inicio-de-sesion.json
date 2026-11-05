@@ -1,0 +1,79 @@
+{
+  "casos": [
+    {
+      "titulo": "Ingreso exitoso con usuario estándar",
+      "tipo": "positivo",
+      "pasos": [
+        "Dado que estoy en la página de inicio de sesión",
+        "Cuando ingreso el usuario \"standard_user\"",
+        "Y ingreso la contraseña \"secret_sauce\"",
+        "Y presiono el botón de ingresar",
+        "Entonces veo el listado de productos"
+      ]
+    },
+    {
+      "titulo": "Ingreso rechazado para usuario bloqueado",
+      "tipo": "negativo",
+      "pasos": [
+        "Dado que estoy en la página de inicio de sesión",
+        "Cuando ingreso el usuario \"locked_out_user\"",
+        "Y ingreso la contraseña \"secret_sauce\"",
+        "Y presiono el botón de ingresar",
+        "Entonces veo el mensaje de error \"Epic sadface: Sorry, this user has been locked out.\""
+      ]
+    },
+    {
+      "titulo": "Ingreso rechazado con credenciales inválidas",
+      "tipo": "negativo",
+      "pasos": [
+        "Dado que estoy en la página de inicio de sesión",
+        "Cuando ingreso el usuario \"usuario_inexistente\"",
+        "Y ingreso la contraseña \"clave_incorrecta\"",
+        "Y presiono el botón de ingresar",
+        "Entonces veo el mensaje de error \"Epic sadface: Username and password do not match any user in this service\""
+      ]
+    },
+    {
+      "titulo": "Ingreso rechazado con usuario vacío",
+      "tipo": "limite",
+      "pasos": [
+        "Dado que estoy en la página de inicio de sesión",
+        "Cuando ingreso el usuario \"\"",
+        "Y ingreso la contraseña \"secret_sauce\"",
+        "Y presiono el botón de ingresar",
+        "Entonces veo el mensaje de error \"Epic sadface: Username is required\""
+      ]
+    },
+    {
+      "titulo": "Ingreso rechazado con contraseña vacía",
+      "tipo": "limite",
+      "pasos": [
+        "Dado que estoy en la página de inicio de sesión",
+        "Cuando ingreso el usuario \"standard_user\"",
+        "Y ingreso la contraseña \"\"",
+        "Y presiono el botón de ingresar",
+        "Entonces veo el mensaje de error \"Epic sadface: Password is required\""
+      ]
+    },
+    {
+      "titulo": "Ingreso rechazado con usuario y contraseña vacíos",
+      "tipo": "limite",
+      "pasos": [
+        "Dado que estoy en la página de inicio de sesión",
+        "Cuando ingreso el usuario \"\"",
+        "Y ingreso la contraseña \"\"",
+        "Y presiono el botón de ingresar",
+        "Entonces veo el mensaje de error \"Epic sadface: Username is required\""
+      ]
+    },
+    {
+      "titulo": "Cierre de sesión vuelve a la página de inicio de sesión",
+      "tipo": "positivo",
+      "pasos": [
+        "Dado que inicié sesión como \"standard_user\"",
+        "Cuando cierro la sesión",
+        "Entonces veo la página de inicio de sesión"
+      ]
+    }
+  ]
+}
