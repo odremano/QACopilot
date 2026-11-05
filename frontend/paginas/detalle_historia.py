@@ -1,6 +1,6 @@
 import streamlit as st
 
-from lib import api
+from lib import api, vista_ejecuciones
 from lib.formato import etiqueta_historia, fecha
 from lib.vista_casos import mostrar_caso
 
@@ -171,8 +171,32 @@ with exportar:
             )
 with ejecutar:
     st.subheader("Ejecutar")
-    st.button("Ejecutar pruebas", disabled=True, key="btn_ejecutar")
-    st.caption("Próximamente (S5)")
+    try:
+        ultimas = api.listar_ejecuciones(historia["id"])
+    except api.ErrorApi as error:
+        st.error(error.mensaje)
+        ultimas = []
+    corriendo = bool(ultimas) and ultimas[0]["estado"] == "en_curso"
+    if st.button(
+        "Ejecutar pruebas",
+        type="primary",
+        disabled=not historia["resumen_casos"]["aprobado"] or corriendo,
+        key="btn_ejecutar",
+    ):
+        try:
+            api.iniciar_ejecucion(historia["id"])
+        except api.ErrorApi as error:
+            st.error(error.mensaje)
+        else:
+            st.rerun()
+    if not historia["resumen_casos"]["aprobado"]:
+        st.caption("Aprobá al menos un caso para ejecutar.")
+    else:
+        st.caption(
+            "Corre los casos aprobados contra SauceDemo con Chromium headless, uno a la vez."
+        )
+    if ultimas:
+        vista_ejecuciones.en_vivo(ultimas[0], vista_ejecuciones.resumen)
 if contenido:
     with st.expander("Ver el código exportado"):
         st.code(contenido, language="typescript")

@@ -156,6 +156,25 @@ def exportar_spec(historia_id: int) -> tuple[str, str]:
     return (nombre.group(1) if nombre else f"HU-{historia_id}.spec.ts"), respuesta.text
 
 
+def iniciar_ejecucion(historia_id: int) -> dict:
+    """Inicia la ejecución de los casos aprobados; responde enseguida «en curso» (RF-07)."""
+    return _pedir("POST", f"/historias/{historia_id}/ejecuciones")
+
+
+def listar_ejecuciones(historia_id: int | None = None) -> list[dict]:
+    ruta = "/ejecuciones" if historia_id is None else f"/ejecuciones?historia_id={historia_id}"
+    return _pedir("GET", ruta)
+
+
+def obtener_ejecucion(ejecucion_id: int) -> dict:
+    return _pedir("GET", f"/ejecuciones/{ejecucion_id}")
+
+
+def obtener_captura(url_captura: str) -> bytes:
+    """PNG de la captura de un caso fallido (RF-08); url_captura viene de la API."""
+    return _enviar("GET", url_captura).content
+
+
 def obtener_catalogo() -> dict:
     return _pedir("GET", "/catalogo")
 
