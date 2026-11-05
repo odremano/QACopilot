@@ -165,7 +165,7 @@ def test_get_catalogo(client):
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
     assert cuerpo["sut"] == "saucedemo"
-    assert cuerpo["version"] == 1
+    assert cuerpo["version"] == 2
     primero = cuerpo["pasos"][0]
     assert primero == {
         "id": "abrir_login",

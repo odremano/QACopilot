@@ -5,12 +5,12 @@
 # - plantilla: código Playwright (TypeScript) del paso. Al exportar (RF-06), {texto} se
 #   reemplaza por el valor del caso escapado como literal de cadena; el LLM nunca escribe código.
 #
-# Selectores verificados contra https://www.saucedemo.com el 04/11/2026.
+# Selectores verificados contra https://www.saucedemo.com el 04/11/2026 (v2: botón de cancelar, 05/11/2026).
 # Si este archivo es inválido, el backend no inicia.
 
 sut: saucedemo
 base_url: https://www.saucedemo.com
-version: 1
+version: 2
 
 # Datos de SauceDemo para el prompt (RF-03), verificados contra el código de la aplicación el
 # 05/11/2026. Los valores van en inglés, tal como los muestra la aplicación.
@@ -30,6 +30,7 @@ contexto: |-
   Títulos de página: "Products", "Your Cart", "Checkout: Your Information", "Checkout: Overview", "Checkout: Complete!".
   El total del checkout suma un impuesto del 8 % redondeado a centavos. Ejemplos: solo "Sauce Labs Backpack" → "Total: $32.39"; "Sauce Labs Backpack" y "Sauce Labs Bike Light" → "Total: $43.18".
   El contador del carrito muestra la cantidad como número ("1", "2"); sin productos no se muestra.
+  El botón de cancelar del checkout vuelve a "Your Cart" desde "Checkout: Your Information" y a "Products" desde "Checkout: Overview"; en los dos casos el carrito conserva los productos.
 
 pasos:
   # --- Inicio de sesión ---------------------------------------
@@ -171,6 +172,12 @@ pasos:
     patron: presiono el botón de continuar
     plantilla: |-
       await page.locator('[data-test="continue"]').click();
+
+  - id: cancelar_checkout
+    grupo: checkout
+    patron: presiono el botón de cancelar
+    plantilla: |-
+      await page.locator('[data-test="cancel"]').click();
 
   - id: ver_total
     grupo: checkout

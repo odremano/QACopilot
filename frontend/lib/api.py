@@ -1,6 +1,7 @@
 """Cliente HTTP único hacia el backend. Ninguna página llama a httpx ni a la base directamente."""
 
 import os
+import re
 from typing import Any
 
 import httpx
@@ -53,6 +54,16 @@ def _pedir(
     aceptar: tuple = (),
     timeout: float = TIMEOUT_SEGUNDOS,
 ) -> Any:
+    return _enviar(metodo, ruta, json=json, aceptar=aceptar, timeout=timeout).json()
+
+
+def _enviar(
+    metodo: str,
+    ruta: str,
+    json: dict | None = None,
+    aceptar: tuple = (),
+    timeout: float = TIMEOUT_SEGUNDOS,
+) -> httpx.Response:
     try:
         with httpx.Client(base_url=API_BASE_URL, timeout=timeout) as cliente:
             respuesta = cliente.request(metodo, ruta, json=json)
@@ -60,7 +71,7 @@ def _pedir(
         raise ErrorApi(SIN_CONEXION) from exc
 
     if respuesta.is_success or respuesta.status_code in aceptar:
-        return respuesta.json()
+        return respuesta
 
     try:
         cuerpo = respuesta.json()
@@ -136,6 +147,13 @@ def descartar_caso(caso_id: int) -> dict:
 
 def volver_a_pendiente(caso_id: int) -> dict:
     return _pedir("POST", f"/casos/{caso_id}/pendiente")
+
+
+def exportar_spec(historia_id: int) -> tuple[str, str]:
+    """Nombre y contenido del .spec.ts con los casos aprobados de la historia (RF-06)."""
+    respuesta = _enviar("GET", f"/historias/{historia_id}/export")
+    nombre = re.search(r'filename="([^"]+)"', respuesta.headers.get("content-disposition", ""))
+    return (nombre.group(1) if nombre else f"HU-{historia_id}.spec.ts"), respuesta.text
 
 
 def obtener_catalogo() -> dict:
