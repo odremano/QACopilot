@@ -1,0 +1,119 @@
+{
+  "casos": [
+    {
+      "titulo": "Checkout exitoso con un producto en el carrito",
+      "tipo": "positivo",
+      "pasos": [
+        "Dado que inicié sesión como \"standard_user\"",
+        "Cuando agrego al carrito el producto \"Sauce Labs Backpack\"",
+        "Y abro el carrito",
+        "Y presiono el botón de checkout",
+        "Entonces veo el título \"Checkout: Your Information\"",
+        "Cuando ingreso el nombre \"Juan\"",
+        "Y ingreso el apellido \"Perez\"",
+        "Y ingreso el código postal \"1234\"",
+        "Y presiono el botón de continuar",
+        "Entonces veo el título \"Checkout: Overview\"",
+        "Y veo el total \"Total: $32.39\"",
+        "Cuando presiono el botón de finalizar",
+        "Entonces veo la confirmación de la compra",
+        "Y veo el título \"Checkout: Complete!\""
+      ]
+    },
+    {
+      "titulo": "Checkout exitoso con dos productos y total con impuestos",
+      "tipo": "positivo",
+      "pasos": [
+        "Dado que inicié sesión como \"standard_user\"",
+        "Cuando agrego al carrito el producto \"Sauce Labs Backpack\"",
+        "Y agrego al carrito el producto \"Sauce Labs Bike Light\"",
+        "Y abro el carrito",
+        "Y presiono el botón de checkout",
+        "Y ingreso el nombre \"Ana\"",
+        "Y ingreso el apellido \"Gomez\"",
+        "Y ingreso el código postal \"5000\"",
+        "Y presiono el botón de continuar",
+        "Entonces veo el título \"Checkout: Overview\"",
+        "Y veo el producto \"Sauce Labs Backpack\" en el carrito",
+        "Y veo el producto \"Sauce Labs Bike Light\" en el carrito",
+        "Y veo el total \"Total: $43.18\"",
+        "Cuando presiono el botón de finalizar",
+        "Entonces veo la confirmación de la compra"
+      ]
+    },
+    {
+      "titulo": "Checkout sin nombre muestra error de campo obligatorio",
+      "tipo": "negativo",
+      "pasos": [
+        "Dado que inicié sesión como \"standard_user\"",
+        "Cuando agrego al carrito el producto \"Sauce Labs Backpack\"",
+        "Y abro el carrito",
+        "Y presiono el botón de checkout",
+        "Y ingreso el nombre \"\"",
+        "Y ingreso el apellido \"Perez\"",
+        "Y ingreso el código postal \"1234\"",
+        "Y presiono el botón de continuar",
+        "Entonces veo el mensaje de error \"Error: First Name is required\""
+      ]
+    },
+    {
+      "titulo": "Checkout sin apellido muestra error de campo obligatorio",
+      "tipo": "negativo",
+      "pasos": [
+        "Dado que inicié sesión como \"standard_user\"",
+        "Cuando agrego al carrito el producto \"Sauce Labs Backpack\"",
+        "Y abro el carrito",
+        "Y presiono el botón de checkout",
+        "Y ingreso el nombre \"Juan\"",
+        "Y ingreso el apellido \"\"",
+        "Y ingreso el código postal \"1234\"",
+        "Y presiono el botón de continuar",
+        "Entonces veo el mensaje de error \"Error: Last Name is required\""
+      ]
+    },
+    {
+      "titulo": "Checkout sin código postal muestra error de campo obligatorio",
+      "tipo": "negativo",
+      "pasos": [
+        "Dado que inicié sesión como \"standard_user\"",
+        "Cuando agrego al carrito el producto \"Sauce Labs Backpack\"",
+        "Y abro el carrito",
+        "Y presiono el botón de checkout",
+        "Y ingreso el nombre \"Juan\"",
+        "Y ingreso el apellido \"Perez\"",
+        "Y ingreso el código postal \"\"",
+        "Y presiono el botón de continuar",
+        "Entonces veo el mensaje de error \"Error: Postal Code is required\""
+      ]
+    },
+    {
+      "titulo": "Checkout con todos los campos vacíos muestra error de nombre",
+      "tipo": "limite",
+      "pasos": [
+        "Dado que inicié sesión como \"standard_user\"",
+        "Cuando agrego al carrito el producto \"Sauce Labs Onesie\"",
+        "Y abro el carrito",
+        "Y presiono el botón de checkout",
+        "Y ingreso el nombre \"\"",
+        "Y ingreso el apellido \"\"",
+        "Y ingreso el código postal \"\"",
+        "Y presiono el botón de continuar",
+        "Entonces veo el mensaje de error \"Error: First Name is required\""
+      ]
+    },
+    {
+      "titulo": "Cancelar en el paso de datos personales vuelve al carrito",
+      "tipo": "positivo",
+      "pasos": [
+        "Dado que inicié sesión como \"standard_user\"",
+        "Cuando agrego al carrito el producto \"Sauce Labs Bike Light\"",
+        "Y abro el carrito",
+        "Y presiono el botón de checkout",
+        "Entonces veo el título \"Checkout: Your Information\"",
+        "Cuando presiono el botón de seguir comprando",
+        "Entonces veo el título \"Your Cart\"",
+        "Y veo el producto \"Sauce Labs Bike Light\" en el carrito"
+      ]
+    }
+  ]
+}

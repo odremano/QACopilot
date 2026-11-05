@@ -13,3 +13,14 @@ def fecha(iso: str | None) -> str:
 
 def etiqueta_historia(historia: dict) -> str:
     return f"{historia['codigo']} · {historia['titulo']}"
+
+
+TIPOS_CASO = {"positivo": "Positivo", "negativo": "Negativo", "limite": "Límite"}
+ESTADOS_CASO = {"pendiente": "Pendiente", "aprobado": "Aprobado", "descartado": "Descartado"}
+
+
+def etiqueta_caso(caso: dict) -> str:
+    icono = "✅" if caso["valido"] else "⚠️"
+    tipo = TIPOS_CASO.get(caso["tipo"], caso["tipo"])
+    estado = ESTADOS_CASO.get(caso["estado"], caso["estado"])
+    return f"{icono} {caso['codigo']} · {caso['titulo']} — {tipo} · {estado}"

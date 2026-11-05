@@ -1,7 +1,7 @@
 import streamlit as st
 
 from lib import api
-from lib.formato import etiqueta_historia, fecha
+from lib.formato import etiqueta_caso, etiqueta_historia, fecha
 
 st.set_page_config(page_title="QA Copilot", layout="wide")
 
@@ -95,14 +95,59 @@ if guardar:
         st.rerun()
 
 st.divider()
+st.subheader("Casos de prueba")
+
+if mensaje := st.session_state.pop("generacion_ok", None):
+    st.success(mensaje)
+
+try:
+    casos = api.listar_casos(historia["id"])
+except api.ErrorApi as error:
+    st.error(error.mensaje)
+    casos = []
+
+boton, ayuda = st.columns([1, 3])
+etiqueta = "Regenerar casos con IA" if casos else "Generar casos con IA"
+with ayuda:
+    if casos:
+        st.caption(
+            "Al regenerar, los casos pendientes se reemplazan por los nuevos; "
+            "los aprobados y los descartados se conservan."
+        )
+    else:
+        st.caption("La IA propone casos usando solo los pasos del catálogo; después los revisás.")
+if boton.button(etiqueta, type="primary", key="generar"):
+    with st.spinner("Generando casos con IA… puede tardar hasta un minuto."):
+        try:
+            generacion = api.generar_casos(historia["id"])
+        except api.ErrorApi as error:
+            st.error(error.mensaje)
+        else:
+            st.session_state["generacion_ok"] = (
+                f"Se generaron {len(generacion['casos'])} casos: "
+                f"{generacion['casos_validos']} válidos y "
+                f"{generacion['casos_invalidos']} inválidos."
+            )
+            st.rerun()
+
+if not casos:
+    st.info("Esta historia todavía no tiene casos de prueba.")
+for caso in casos:
+    with st.expander(etiqueta_caso(caso), expanded=not caso["valido"]):
+        st.code(caso["gherkin"], language="gherkin")
+        if caso["errores_validacion"]:
+            st.error(
+                "**El caso no es válido:**\n"
+                + "\n".join(f"- {error}" for error in caso["errores_validacion"])
+            )
+
+st.divider()
 PROXIMAMENTE = [
-    ("Generar casos", "Generar casos con IA", "S4"),
-    ("Casos de prueba", "Revisar casos", "S4"),
     ("Exportar", "Descargar .spec.ts", "S5"),
     ("Ejecutar", "Ejecutar pruebas", "S5"),
 ]
-for columna, (seccion, boton, semana) in zip(st.columns(4), PROXIMAMENTE, strict=True):
+for columna, (seccion, boton_texto, semana) in zip(st.columns(2), PROXIMAMENTE, strict=True):
     with columna:
         st.subheader(seccion)
-        st.button(boton, disabled=True, key=f"btn_{seccion}")
+        st.button(boton_texto, disabled=True, key=f"btn_{seccion}")
         st.caption(f"Próximamente ({semana})")

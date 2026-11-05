@@ -1,0 +1,94 @@
+{
+  "casos": [
+    {
+      "titulo": "Agregar un producto desde el inventario y verlo en el carrito",
+      "tipo": "positivo",
+      "pasos": [
+        "Dado que inicié sesión como \"standard_user\"",
+        "Cuando agrego al carrito el producto \"Sauce Labs Backpack\"",
+        "Entonces veo \"1\" en el ícono del carrito",
+        "Cuando abro el carrito",
+        "Entonces veo el título \"Your Cart\"",
+        "Y veo el producto \"Sauce Labs Backpack\" en el carrito"
+      ]
+    },
+    {
+      "titulo": "El contador refleja la cantidad de dos productos agregados",
+      "tipo": "positivo",
+      "pasos": [
+        "Dado que inicié sesión como \"standard_user\"",
+        "Cuando agrego al carrito el producto \"Sauce Labs Backpack\"",
+        "Y agrego al carrito el producto \"Sauce Labs Bike Light\"",
+        "Entonces veo \"2\" en el ícono del carrito",
+        "Cuando abro el carrito",
+        "Entonces veo el producto \"Sauce Labs Backpack\" en el carrito",
+        "Y veo el producto \"Sauce Labs Bike Light\" en el carrito"
+      ]
+    },
+    {
+      "titulo": "Quitar un producto desde el inventario actualiza el contador",
+      "tipo": "positivo",
+      "pasos": [
+        "Dado que inicié sesión como \"standard_user\"",
+        "Cuando agrego al carrito el producto \"Sauce Labs Backpack\"",
+        "Y agrego al carrito el producto \"Sauce Labs Onesie\"",
+        "Y quito del carrito el producto \"Sauce Labs Onesie\"",
+        "Entonces veo \"1\" en el ícono del carrito",
+        "Cuando abro el carrito",
+        "Entonces no veo el producto \"Sauce Labs Onesie\" en el carrito",
+        "Y veo el producto \"Sauce Labs Backpack\" en el carrito"
+      ]
+    },
+    {
+      "titulo": "Quitar el único producto agregado deja el carrito sin productos",
+      "tipo": "negativo",
+      "pasos": [
+        "Dado que inicié sesión como \"standard_user\"",
+        "Cuando agrego al carrito el producto \"Sauce Labs Fleece Jacket\"",
+        "Y quito del carrito el producto \"Sauce Labs Fleece Jacket\"",
+        "Entonces veo el ícono del carrito sin productos",
+        "Cuando abro el carrito",
+        "Entonces no veo el producto \"Sauce Labs Fleece Jacket\" en el carrito"
+      ]
+    },
+    {
+      "titulo": "Carrito vacío al iniciar sesión",
+      "tipo": "limite",
+      "pasos": [
+        "Dado que inicié sesión como \"standard_user\"",
+        "Entonces veo el ícono del carrito sin productos",
+        "Cuando abro el carrito",
+        "Entonces veo el título \"Your Cart\"",
+        "Y no veo el producto \"Sauce Labs Backpack\" en el carrito"
+      ]
+    },
+    {
+      "titulo": "El carrito conserva los productos al volver al inventario",
+      "tipo": "positivo",
+      "pasos": [
+        "Dado que inicié sesión como \"standard_user\"",
+        "Cuando agrego al carrito el producto \"Sauce Labs Bolt T-Shirt\"",
+        "Y abro el carrito",
+        "Y presiono el botón de seguir comprando",
+        "Entonces veo el listado de productos",
+        "Y veo \"1\" en el ícono del carrito",
+        "Cuando abro el carrito",
+        "Entonces veo el producto \"Sauce Labs Bolt T-Shirt\" en el carrito"
+      ]
+    },
+    {
+      "titulo": "Quitar un producto desde el carrito mantiene el resto de los productos",
+      "tipo": "positivo",
+      "pasos": [
+        "Dado que inicié sesión como \"standard_user\"",
+        "Cuando agrego al carrito el producto \"Sauce Labs Backpack\"",
+        "Y agrego al carrito el producto \"Test.allTheThings() T-Shirt (Red)\"",
+        "Y abro el carrito",
+        "Y quito del carrito el producto \"Sauce Labs Backpack\"",
+        "Entonces veo \"1\" en el ícono del carrito",
+        "Y no veo el producto \"Sauce Labs Backpack\" en el carrito",
+        "Y veo el producto \"Test.allTheThings() T-Shirt (Red)\" en el carrito"
+      ]
+    }
+  ]
+}

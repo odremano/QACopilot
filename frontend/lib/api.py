@@ -8,6 +8,8 @@ import httpx
 API_BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:8000").rstrip("/")
 API_PUBLIC_URL = os.environ.get("API_PUBLIC_URL", API_BASE_URL).rstrip("/")
 TIMEOUT_SEGUNDOS = 10.0
+# La generación puede reintentar hasta 3 veces contra el LLM (90 s cada una como máximo).
+TIMEOUT_GENERACION = 300.0
 TITULO_MAX = 120
 
 SIN_CONEXION = "No se pudo conectar con el servidor. Probá de nuevo en unos segundos."
@@ -43,9 +45,15 @@ def _traducir_422(cuerpo: Any) -> str:
     return "  \n".join(mensajes) or DATOS_INVALIDOS
 
 
-def _pedir(metodo: str, ruta: str, json: dict | None = None, aceptar: tuple = ()) -> Any:
+def _pedir(
+    metodo: str,
+    ruta: str,
+    json: dict | None = None,
+    aceptar: tuple = (),
+    timeout: float = TIMEOUT_SEGUNDOS,
+) -> Any:
     try:
-        with httpx.Client(base_url=API_BASE_URL, timeout=TIMEOUT_SEGUNDOS) as cliente:
+        with httpx.Client(base_url=API_BASE_URL, timeout=timeout) as cliente:
             respuesta = cliente.request(metodo, ruta, json=json)
     except httpx.HTTPError as exc:
         raise ErrorApi(SIN_CONEXION) from exc
@@ -99,6 +107,15 @@ def crear_historia(datos: dict) -> dict:
 def editar_historia(historia_id: int, datos: dict) -> dict:
     _validar_o_fallar(datos)
     return _pedir("PUT", f"/historias/{historia_id}", json=datos)
+
+
+def listar_casos(historia_id: int) -> list[dict]:
+    return _pedir("GET", f"/historias/{historia_id}/casos")
+
+
+def generar_casos(historia_id: int) -> dict:
+    """Genera (o regenera) casos con IA. Puede tardar: usa un timeout largo."""
+    return _pedir("POST", f"/historias/{historia_id}/generaciones", timeout=TIMEOUT_GENERACION)
 
 
 def obtener_catalogo() -> dict:

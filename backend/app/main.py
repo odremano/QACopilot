@@ -8,7 +8,7 @@ from fastapi.responses import RedirectResponse
 from app.catalogo import CatalogoInvalido, cargar_catalogo
 from app.config import settings
 from app.errors import registrar_manejadores
-from app.routers import catalogo, historias, salud
+from app.routers import casos, catalogo, historias, salud
 from app.version import VERSION
 
 logging.basicConfig(
@@ -46,6 +46,10 @@ app = FastAPI(
     lifespan=lifespan,
     openapi_tags=[
         {"name": "Historias", "description": "Gestión de historias de usuario (RF-01)."},
+        {
+            "name": "Casos",
+            "description": "Generación con IA y validación de casos de prueba (RF-03, RF-04).",
+        },
         {"name": "Catálogo", "description": "Pasos Gherkin permitidos para el SUT (RF-02)."},
         {"name": "Salud", "description": "Estado del servicio y de sus dependencias."},
     ],
@@ -53,6 +57,7 @@ app = FastAPI(
 
 registrar_manejadores(app)
 app.include_router(historias.router)
+app.include_router(casos.router)
 app.include_router(catalogo.router)
 app.include_router(salud.router)
 

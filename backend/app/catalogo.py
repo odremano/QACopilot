@@ -67,6 +67,9 @@ class Catalogo(BaseModel):
     sut: str = Field(min_length=1)
     base_url: str = Field(min_length=1)
     version: int = Field(ge=1)
+    # Datos reales del SUT (usuarios, mensajes, productos) que el prompt le pasa al LLM para
+    # que los valores de los pasos coincidan con la aplicación.
+    contexto: str = ""
     pasos: list[PasoCatalogo] = Field(min_length=1)
 
     _expresiones: list[tuple[re.Pattern[str], PasoCatalogo]] = PrivateAttr(default_factory=list)

@@ -7,7 +7,12 @@ import pytest
 from app.catalogo import cargar_catalogo
 from app.config import settings
 from app.models.estados import TipoCaso
-from app.services.validador import RespuestaInvalida, validar_gherkin, validar_respuesta
+from app.services.validador import (
+    RespuestaInvalida,
+    armar_gherkin,
+    validar_gherkin,
+    validar_respuesta,
+)
 
 CATALOGO = cargar_catalogo(settings.catalogo_path)
 
@@ -33,8 +38,13 @@ def _respuesta(*casos: dict) -> str:
     return json.dumps({"casos": list(casos)}, ensure_ascii=False)
 
 
-def _caso(gherkin: str = LOGIN_VALIDO, tipo: str = "positivo", titulo: str = "Login") -> dict:
-    return {"titulo": titulo, "tipo": tipo, "gherkin": gherkin}
+def _pasos(escenario: str) -> list[str]:
+    """Pasos de un escenario de ejemplo, como los devuelve el LLM (Anexo B)."""
+    return [linea.strip() for linea in escenario.splitlines()[1:] if linea.strip()]
+
+
+def _caso(escenario: str = LOGIN_VALIDO, tipo: str = "positivo", titulo: str = "Login") -> dict:
+    return {"titulo": titulo, "tipo": tipo, "pasos": _pasos(escenario)}
 
 
 # --- Coincidencia con el catálogo ------------------------------------------
@@ -216,6 +226,8 @@ def test_tipo_se_normaliza(tipo):
         ('{"escenarios": []}', "no respeta el formato"),
         (_respuesta(_caso(tipo="feliz")), "no respeta el formato"),
         (_respuesta({"titulo": "x", "tipo": "positivo"}), "no respeta el formato"),
+        (_respuesta(_caso(LOGIN_VALIDO) | {"pasos": []}), "no respeta el formato"),
+        (_respuesta(_caso(LOGIN_VALIDO) | {"pasos": "Dado algo"}), "no respeta el formato"),
         (_respuesta(_caso(titulo="x" * 201)), "no respeta el formato"),
     ],
 )
@@ -232,3 +244,24 @@ def test_respuesta_invalida_conserva_el_detalle_tecnico():
 
     assert exc.value.detalle is not None
     assert "casos[0].tipo" in exc.value.detalle
+
+
+def test_el_escenario_se_arma_con_el_titulo_y_un_paso_por_linea():
+    casos = validar_respuesta(_respuesta(_caso(titulo="Login  exitoso\n")), CATALOGO)
+
+    assert casos[0].gherkin == LOGIN_VALIDO.replace("Inicio de sesión exitoso", "Login exitoso")
+
+
+def test_armar_gherkin_es_lo_que_se_valida():
+    assert validar_gherkin(armar_gherkin("x", _pasos(LOGIN_VALIDO)), CATALOGO) == []
+
+
+def test_paso_sin_palabra_clave_se_marca_invalido():
+    pasos = ["que estoy en la página de inicio de sesión", "Entonces veo el listado de productos"]
+
+    errores = validar_gherkin(armar_gherkin("x", pasos), CATALOGO)
+
+    assert errores == [
+        "Hay texto que no es un paso: «que estoy en la página de inicio de sesión». "
+        "Los pasos empiezan con Dado, Cuando, Entonces, Y o Pero."
+    ]
