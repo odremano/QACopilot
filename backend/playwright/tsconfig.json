@@ -1,0 +1,14 @@
+{
+  // Solo para verificar que los .spec.ts exportados compilan (CA-06): tsc --noEmit.
+  // Playwright transpila los tests por su cuenta al ejecutarlos.
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  // playwright.config.ts usa tipos de Node, que no hacen falta para los tests.
+  "include": ["**/*.spec.ts"]
+}

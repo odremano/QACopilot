@@ -144,6 +144,14 @@ def validar_gherkin(texto: str, catalogo: Catalogo) -> list[str]:
     return errores
 
 
+def pasos_del_escenario(texto: str) -> list[tuple[str, str]]:
+    """Palabra clave y texto de cada paso de un caso ya validado (lo usa el exportador)."""
+    documento = Parser().parse(TokenScanner(CABECERA + texto))
+    hijos = documento["feature"]["children"]
+    escenario = next(hijo["scenario"] for hijo in hijos if "scenario" in hijo)
+    return [(paso["keyword"].strip(), paso["text"]) for paso in escenario["steps"]]
+
+
 def _texto_libre(descripcion: str, donde: str) -> list[str]:
     lineas = [linea.strip() for linea in descripcion.splitlines() if linea.strip()]
     if not lineas:

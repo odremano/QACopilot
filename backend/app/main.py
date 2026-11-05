@@ -8,7 +8,7 @@ from fastapi.responses import RedirectResponse
 from app.catalogo import CatalogoInvalido, cargar_catalogo
 from app.config import settings
 from app.errors import registrar_manejadores
-from app.routers import casos, catalogo, historias, salud
+from app.routers import casos, catalogo, exportacion, historias, salud
 from app.version import VERSION
 
 logging.basicConfig(
@@ -50,6 +50,10 @@ app = FastAPI(
             "name": "Casos",
             "description": "Generación con IA, validación y revisión de casos (RF-03 a RF-05).",
         },
+        {
+            "name": "Exportación",
+            "description": "Script de Playwright (TypeScript) con los casos aprobados (RF-06).",
+        },
         {"name": "Catálogo", "description": "Pasos Gherkin permitidos para el SUT (RF-02)."},
         {"name": "Salud", "description": "Estado del servicio y de sus dependencias."},
     ],
@@ -58,6 +62,7 @@ app = FastAPI(
 registrar_manejadores(app)
 app.include_router(historias.router)
 app.include_router(casos.router)
+app.include_router(exportacion.router)
 app.include_router(catalogo.router)
 app.include_router(salud.router)
 

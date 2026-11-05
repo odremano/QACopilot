@@ -142,12 +142,37 @@ for caso in casos:
     mostrar_caso(caso)
 
 st.divider()
-PROXIMAMENTE = [
-    ("Exportar", "Descargar .spec.ts", "S5"),
-    ("Ejecutar", "Ejecutar pruebas", "S5"),
-]
-for columna, (seccion, boton_texto, semana) in zip(st.columns(2), PROXIMAMENTE, strict=True):
-    with columna:
-        st.subheader(seccion)
-        st.button(boton_texto, disabled=True, key=f"btn_{seccion}")
-        st.caption(f"Próximamente ({semana})")
+contenido = None
+exportar, ejecutar = st.columns(2)
+with exportar:
+    st.subheader("Exportar")
+    if not historia["resumen_casos"]["aprobado"]:
+        st.button("Descargar .spec.ts", disabled=True, key="btn_exportar")
+        st.caption("Aprobá al menos un caso para exportar.")
+    else:
+        try:
+            nombre, contenido = api.exportar_spec(historia["id"])
+        except api.ErrorApi as error:
+            st.button("Descargar .spec.ts", disabled=True, key="btn_exportar")
+            st.error(error.mensaje)
+        else:
+            st.download_button(
+                "Descargar .spec.ts",
+                data=contenido,
+                file_name=nombre,
+                mime="text/plain",
+                type="primary",
+                key="btn_exportar",
+                on_click="ignore",
+            )
+            st.caption(
+                f"{nombre}: un test de Playwright por cada caso aprobado. El código sale de las "
+                "plantillas del catálogo; la IA no escribe código."
+            )
+with ejecutar:
+    st.subheader("Ejecutar")
+    st.button("Ejecutar pruebas", disabled=True, key="btn_ejecutar")
+    st.caption("Próximamente (S5)")
+if contenido:
+    with st.expander("Ver el código exportado"):
+        st.code(contenido, language="typescript")
