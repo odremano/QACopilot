@@ -3,6 +3,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 
 from app.catalogo import CatalogoInvalido, cargar_catalogo
 from app.config import settings
@@ -54,3 +55,8 @@ registrar_manejadores(app)
 app.include_router(historias.router)
 app.include_router(catalogo.router)
 app.include_router(salud.router)
+
+
+@app.get("/", include_in_schema=False)
+def raiz() -> RedirectResponse:
+    return RedirectResponse("/docs")
