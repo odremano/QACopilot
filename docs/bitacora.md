@@ -125,3 +125,63 @@ Se completa al cierre de cada semana del plan de trabajo (spec, sección 11).
   - Resultados con capturas (RF-08).
 - Agregar al catálogo el paso del botón «Cancel» del checkout.
 - Segundo encuentro: mostrar el flujo de punta a punta, desde la historia hasta la ejecución.
+
+---
+
+## S5 · 02/11 – 08/11
+
+**Fecha de registro:** 05/11/2026
+
+### Hecho
+- **RF-06 · Exportación:**
+  - `services/exportador.py` arma `HU-n.spec.ts` con los casos aprobados: un `test.describe` por historia, un `test("[CP-n] título")` por caso y un `test.step` por cada paso Gherkin. El código sale solo de las plantillas del catálogo.
+  - Lo expone `GET /historias/{id}/export`, que responde 409 si no hay casos aprobados.
+  - En el Detalle hay un botón «Descargar .spec.ts» y una vista del código.
+  - Se cumple CA-06 con una prueba que corre `tsc --noEmit` sobre un archivo exportado.
+- **Catálogo v2:**
+  - Nuevo paso `presiono el botón de cancelar` (`data-test="cancel"`), el que faltaba en S4.
+  - El `contexto` indica a qué pantalla vuelve en cada paso del checkout. Se verificó contra SauceDemo el 05/11.
+- **RF-07 · Ejecución:**
+  - `POST /historias/{id}/ejecuciones` responde 202 con la ejecución «en curso» y Playwright corre en segundo plano.
+  - Usa Chromium headless, 1 worker, sin reintentos, 30 s por test y un tope de 10 minutos por ejecución.
+  - Hay una sola ejecución a la vez y lo garantiza la base. Al arrancar, el backend marca como «error» las ejecuciones que un reinicio dejó colgadas.
+- **RF-08 · Resultados:**
+  - El reporte JSON de Playwright se lee y cada test se asocia a su caso por `[CP-n]`. Se guardan estado, duración, mensaje de error y captura del fallo.
+  - El mensaje queda legible: sin colores ANSI, sin el «Call log» interno y con el paso Gherkin que falló.
+  - Endpoints: `GET /ejecuciones`, `GET /ejecuciones/{id}` y `GET /evidencias/{id}`.
+- **Interfaz:**
+  - En el Detalle, botón «Ejecutar pruebas» con el estado de la última ejecución, que se actualiza solo mientras corre (CA-07).
+  - Pantalla Ejecuciones con el listado, el detalle por caso, el error, la captura (CA-08) y el log.
+  - El Panel muestra las últimas ejecuciones, como adelanto parcial de RF-09.
+- 186 pruebas de pytest. Incluyen:
+  - una de punta a punta con Playwright real contra SauceDemo, con un caso que pasa y otro que falla y genera su captura;
+  - el lector de reportes, probado con un reporte real guardado como muestra (`tests/datos/reporte_playwright.json`).
+- La interfaz se recorrió con Playwright: ejecución en curso, uso de la página mientras corre, resumen, error con su captura y Panel.
+- Diagrama de secuencia de la exportación y la ejecución, y estados de la ejecución, en [`docs/uml/secuencia-ejecucion.md`](uml/secuencia-ejecucion.md).
+
+### Problemas
+- **Separadores de línea Unicode:** al escribir las pruebas de escapado apareció que `str.splitlines()` de Python también corta en U+2028. Un valor con ese carácter partía el literal en dos líneas de TypeScript. Se corrigió en dos partes: las plantillas se dividen solo por `\n` y U+2028 y U+2029 se escapan siempre en los literales.
+- **Ubicación del `.spec.ts`:** Playwright no resuelve `@playwright/test` si el archivo está fuera del proyecto. El runner escribe el archivo en `backend/playwright/ejecuciones/<id>/`, que se ignora en Git y en Docker y se borra al terminar. Las salidas (`reporte.json`, capturas y una copia del `.spec.ts`) van al volumen de evidencias.
+- **`tsc` y los tipos de Node:** `tsc` fallaba en `playwright.config.ts` porque necesita los tipos de Node. En lugar de agregar `@types/node`, el `tsconfig.json` incluye solo los `*.spec.ts`.
+- **Sesión en segundo plano:** FastAPI cierra las dependencias con `yield` antes de correr las tareas en segundo plano, así que la tarea no puede usar la sesión del request. Se agregó la dependencia `FabricaSesiones` para que abra la suya, y en las pruebas se reemplaza por la base de prueba.
+- **Tope de tiempo:** cortar solo el proceso de Playwright dejaba vivos sus workers y el navegador. El runner lo lanza en un grupo de procesos propio y, si se agota el tiempo, corta el grupo completo.
+
+### Decisiones
+- **Un `test.step` por paso Gherkin:** no lo pide la spec, pero el reporte indica en qué paso falló cada caso y el `.spec.ts` se lee como el escenario.
+- **Literales con `json.dumps`:** un literal JSON es un literal de cadena válido en TypeScript. Títulos, pasos y valores entran así. Los comentarios del archivo solo llevan códigos y la versión del catálogo, nunca texto del usuario (RNF-05).
+- **Revalidar al exportar:** un caso aprobado se vuelve a validar contra el catálogo actual. Si ya no coincide, la exportación responde 409 con el código del caso y no genera un archivo roto.
+- **El archivo que se ejecuta es el que se descarga:** el runner usa el mismo exportador y guarda una copia del `.spec.ts` en las evidencias de cada ejecución.
+- **`BackgroundTasks` de FastAPI** en lugar de una cola de tareas (Celery o RQ): con una sola ejecución a la vez y un solo usuario alcanza, y no suma servicios.
+- **Una ejecución a la vez con un índice único parcial** (`ux_ejecucion_una_en_curso`) en lugar de un lock en memoria: la base lo garantiza aunque lleguen dos pedidos al mismo tiempo. La API además informa cuál ejecución está corriendo.
+- **Actualización en vivo con `st.fragment(run_every=2)`:** solo se redibuja el bloque de la ejecución. Cuando termina, se recarga la página completa para actualizar contadores y botones.
+- **Rutas de las capturas:** se guardan relativas a la carpeta de evidencias y se sirven por el id del resultado. La API verifica que la ruta no salga de esa carpeta.
+- **Dependencia nueva aprobada:** `typescript` 7.0.2 como devDependency del proyecto Playwright, solo para el `tsc --noEmit` de CA-06.
+- Las evidencias no se borran por ahora. Medido en local: unos 25 KB por ejecución sin fallos y unos 110 KB con una captura.
+
+### Próximo
+- Probar en producción el flujo completo (exportar, ejecutar y ver una captura) y ensayar la demo del segundo encuentro, que es el flujo de punta a punta.
+- S6:
+  - Panel completo con casos por estado y resultado de la última ejecución por historia (RF-09).
+  - Historial de generaciones (RF-12).
+  - Revisión del modo demo (RF-10) y de la regeneración (RF-11), que ya están implementados.
+  - Limpieza de evidencias viejas.

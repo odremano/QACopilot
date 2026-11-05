@@ -46,7 +46,7 @@ LLM_BASE_URL=https://openrouter.ai/api/v1
 LLM_MODEL=deepseek/deepseek-v4.1-flash-1017
 LLM_API_KEY=<clave de OpenRouter>
 DAILY_GENERATION_LIMIT=30
-# A partir de S5:
+# Opcional (RF-07): URL base contra la que se ejecutan las pruebas.
 # SUT_BASE_URL=https://www.saucedemo.com
 ```
 
@@ -59,7 +59,7 @@ Notas:
 - Conviene ponerle a la clave un límite de crédito en OpenRouter (**Keys → Credit limit**): junto con `DAILY_GENERATION_LIMIT` y Cloudflare Access acota el gasto máximo.
 - Para la defensa, `LLM_PROVIDER=demo` genera casos para las 3 historias de ejemplo con respuestas pregrabadas, sin llamar al proveedor (RF-10).
 
-Después, **Deploy**. El primer build tarda varios minutos porque descarga la imagen de Playwright (~2 GB). Para seguir el avance, mirá la pestaña **Logs**, donde tienen que aparecer "Aplicando migraciones...", "Se cargaron 3 historias de ejemplo.", "Iniciando la API..." y "Catálogo 'saucedemo' v1 cargado con N pasos". Si el catálogo es inválido, el backend no inicia y el error aparece en estos logs.
+Después, **Deploy**. El primer build tarda varios minutos porque descarga la imagen de Playwright (~2 GB). Para seguir el avance, mirá la pestaña **Logs**, donde tienen que aparecer "Aplicando migraciones...", "Se cargaron 3 historias de ejemplo.", "Revisando ejecuciones interrumpidas...", "Iniciando la API..." y "Catálogo 'saucedemo' v2 cargado con N pasos". Si el catálogo es inválido, el backend no inicia y el error aparece en estos logs.
 
 ## 4. Cloudflare Tunnel
 
@@ -80,15 +80,19 @@ Si agregás o cambiás el subdominio de la API, actualizá `API_PUBLIC_URL` en D
 
 - [ ] En Dokploy, los tres contenedores aparecen *running* y `backend` y `frontend` en estado *healthy*.
 - [ ] `https://<api>.ordema.app/salud` responde `{"estado": "ok", "base_de_datos": "ok", ...}`.
-- [ ] `https://<api>.ordema.app/` redirige a `/docs`, que muestra Swagger con las secciones "Historias", "Catálogo" y "Salud".
+- [ ] `https://<api>.ordema.app/` redirige a `/docs`, que muestra Swagger con las secciones "Historias", "Casos", "Exportación", "Ejecuciones", "Catálogo" y "Salud".
 - [ ] `https://<frontend>.ordema.app` abre el Panel con **3 historias**.
 - [ ] En **Historias**, dar de alta una historia nueva: aparece en el listado con su código `HU-n`.
 - [ ] Intentar guardar sin título: aparece "El título es obligatorio." y no se guarda.
 - [ ] En **Detalle de historia**, "Generar casos con IA" crea entre 3 y 8 casos pendientes y `/salud` muestra `"configurado": true`.
+- [ ] Aprobar al menos un caso: **Descargar .spec.ts** baja `HU-n.spec.ts` con un `test("[CP-n] ...")` por caso aprobado.
+- [ ] **Ejecutar pruebas** muestra la ejecución «en curso» y, en unos segundos, el resumen con los casos aprobados. Mientras corre, un segundo intento responde «Ya hay una ejecución en curso».
+- [ ] Con un caso que falla a propósito (por ejemplo, un total incorrecto), **Ejecuciones** muestra el paso que falló y la captura de pantalla.
+- [ ] Después de un redeploy, las ejecuciones anteriores siguen mostrando su captura: el volumen `evidencias` se conserva.
 - [ ] **Catálogo** lista los pasos de SauceDemo agrupados (inicio de sesión, inventario, carrito, checkout).
 - [ ] **Acerca de** muestra la base "OK" y el enlace a `/docs` apunta al subdominio público.
 - [ ] Opcional: desde la terminal del servidor, `docker exec <contenedor-backend> sh -c "cd playwright && npx playwright test smoke"` pasa (Chromium funciona en el servidor).
 
-## 6. Pendiente (S6): Cloudflare Access
+## 6. Cloudflare Access
 
-Hasta S6 la aplicación queda pública y sin autenticación (fuera de alcance, DEC-08). En S6 se agrega una aplicación de **Cloudflare Access** que cubra ambos hostnames, con política de código de acceso por correo (RNF-07). Si querés limitar la exposición antes, podés activar Access desde el primer despliegue: no requiere cambios en el código.
+Está activo desde S4 (RNF-07). Una aplicación de **Cloudflare Access** cubre los dos hostnames con la política de acceso configurada en Zero Trust. No requiere cambios en el código. Si se recrea el túnel o se agrega un subdominio, hay que incluirlo en la aplicación de Access.
