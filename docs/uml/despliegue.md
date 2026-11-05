@@ -7,7 +7,7 @@ flowchart TB
     nav["Navegador<br/>Analista QA"]
 
     subgraph cloudflare["Cloudflare"]
-        tunel["Cloudflare Tunnel<br/>HTTPS + WebSockets<br/>Access (S6)"]
+        tunel["Cloudflare Tunnel<br/>HTTPS + WebSockets<br/>Cloudflare Access"]
     end
 
     subgraph servidor["Servidor propio · Proxmox + Dokploy"]
@@ -20,7 +20,7 @@ flowchart TB
         evidencias[("volumen evidencias<br/>/data/evidencias")]
     end
 
-    llm["API LLM<br/>DeepSeek / Ollama"]
+    llm["API LLM<br/>OpenRouter (DeepSeek)"]
     sut["SauceDemo<br/>saucedemo.com"]
 
     nav -->|HTTPS| tunel

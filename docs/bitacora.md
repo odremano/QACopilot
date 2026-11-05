@@ -65,3 +65,63 @@ Se completa al cierre de cada semana del plan de trabajo (spec, sección 11).
 - Primer despliegue en Dokploy con Cloudflare Tunnel siguiendo `docs/deploy-dokploy.md` (definir los subdominios).
 - Comunicar al tutor el cambio a SauceDemo y la elección de Streamlit (spec 2.6).
 - S4: catálogo de pasos de SauceDemo (RF-02), integración con DeepSeek y prompt v1 (RF-03), validación (RF-04) y revisión humana (RF-05).
+
+---
+
+## S4 · 26/10 – 01/11
+
+**Fecha de registro:** 05/11/2026
+
+### Hecho
+- **Despliegue en Dokploy** con Cloudflare Tunnel en `qa.ordema.app` (interfaz) y `qa-api.ordema.app` (API), los dos protegidos con **Cloudflare Access**, que estaba previsto para S6.
+- **RF-02:** catálogo de 28 pasos de SauceDemo en `backend/catalogo/saucedemo.yaml`, con un paso por acción y su plantilla de Playwright. Cubre los grupos de inicio de sesión, inventario, carrito, checkout y general, con selectores `data-test` verificados contra la aplicación el 04/11. El cargador valida el archivo con Pydantic: identificadores y patrones únicos, un único parámetro `"{texto}"` entre comillas que también debe estar en la plantilla, y presencia de los grupos obligatorios. Si el archivo es inválido, el backend no inicia (CA-02). La pantalla Catálogo lo muestra en modo de solo lectura.
+- **RF-04:** validador en `services/validador.py`. Revisa el JSON y el esquema con Pydantic y la sintaxis Gherkin con `gherkin-official`. Exige un único Escenario sin Característica, Esquema ni tablas, y compara cada paso con el catálogo sin distinguir mayúsculas ni cantidad de espacios. Los errores se informan en español con el número y el texto del paso.
+- **RF-03:**
+  - Generación con IA mediante OpenRouter y el modelo `deepseek/deepseek-v4.1-flash-1017`. Usa el prompt de sistema versionado `prompts/v1.md` (Anexo A), que incluye el catálogo agrupado por pantalla, los datos reales de SauceDemo y el ejemplo del Anexo B.
+  - Pide salida JSON y reintenta hasta 2 veces si la respuesta no respeta el formato o las reglas: de 3 a 8 casos, con al menos un positivo y un negativo.
+  - Cada generación queda registrada en `generacion` con los intentos crudos, la duración y el error, también las fallidas.
+  - Una generación real tarda entre 6 y 12 s y produce unos 7 casos válidos por historia.
+- **Adelantos de S6:**
+  - Límite diario de generaciones (RNF-08, `LLM_DAILY_LIMIT`, responde 429).
+  - Modo demo (`LLM_PROVIDER=demo`) con respuestas pregrabadas de las tres historias de ejemplo en `backend/demo/`.
+  - Regeneración que reemplaza los casos pendientes y conserva los aprobados y descartados (base de RF-11).
+- **RF-05:**
+  - Revisión humana desde la tarjeta de cada caso: aprobar (solo los válidos), descartar, volver a pendiente y editar.
+  - La edición solo se permite en estado pendiente y siempre revalida el caso.
+  - Las transiciones inválidas responden 409 con el motivo.
+  - Se cumplen los 4 escenarios de CA-05.
+- `GET /` redirige a `/docs`.
+- 146 pruebas de pytest, incluidas las del catálogo, el validador, el proveedor LLM con transporte simulado, la generación con un proveedor falso y la máquina de estados. Ruff y `alembic check` quedan limpios.
+- La interfaz se verificó con Playwright: generación, edición de un caso inválido, aprobación, descarte y vuelta a pendiente.
+- Diagrama de secuencia de la generación y la revisión en [`docs/uml/secuencia-generacion.md`](uml/secuencia-generacion.md).
+
+### Problemas
+- **S4 cerró 4 días tarde** (el 05/11 en lugar del 01/11), lo que achica el margen de S5 antes del segundo encuentro. Lo compensa en parte haber adelantado Cloudflare Access, el límite diario, el modo demo y la regeneración, que estaban previstos para S6.
+- El parser de `gherkin-official` no marca como error las líneas sin palabra clave ni las palabras clave en inglés (`Scenario:`): las toma como descripción en silencio. Se agregó una verificación propia de texto libre con su mensaje.
+- Primero el modelo usó valores inventados, como mensajes de error y totales que no existen en SauceDemo. Se sumó al catálogo un bloque `contexto` con datos verificados en el código de la aplicación el 05/11 (usuarios, mensajes, productos, precios, órdenes, títulos y el impuesto del 8 %), y el prompt le indica al modelo usar solo esos valores.
+- El modelo de DeepSeek razona por defecto y eso consumía tokens y tiempo. Con OpenRouter se envía `reasoning: {"exclude": true}` y `max_tokens` amplio para que el JSON no quede cortado.
+- **Falta un paso en el catálogo:** no hay paso para el botón «Cancel» del checkout, así que el modelo propuso un caso de «cancelar» con el paso de «seguir comprando». Es válido contra el catálogo pero no prueba lo que dice. Se dejó en la respuesta demo de Checkout como ejemplo de por qué hace falta la revisión humana, y el paso se agrega en S5.
+- `ruff format` dentro del contenedor no modifica los archivos del host, porque no hay volúmenes de código montados. Se formatea desde el host con la misma versión de ruff.
+- La interfaz de Cloudflare Zero Trust cambió de nombres respecto de las guías conocidas: se siguió la documentación oficial actual.
+
+### Decisiones
+- **OpenRouter en lugar de la API directa de DeepSeek:** da acceso al mismo modelo con una sola clave y un límite de crédito configurable. La API es compatible con OpenAI, así que volver a DeepSeek directo solo requiere cambiar `LLM_PROVIDER`, `LLM_BASE_URL` y `LLM_MODEL`.
+- **httpx en lugar del SDK de OpenAI:** es una sola llamada `POST /chat/completions` y httpx ya era dependencia del proyecto, así que no se agregó un paquete nuevo. Pasó de las dependencias de desarrollo a las principales.
+- **Corrección del formato de salida:** en la fase de RF-04 el esquema esperaba un campo `gherkin` con texto libre, pero el Anexo B define `pasos` como lista. Se ajustó al Anexo B. El modelo devuelve `{titulo, tipo, pasos}` y el backend arma `Escenario: <título>` con un paso por línea, así que el LLM no escribe la estructura Gherkin.
+- **Un caso es un único Escenario,** sin Característica, Esquema ni tablas. Simplifica la validación y la exportación, y alcanza para los flujos de SauceDemo.
+- La coincidencia con el catálogo no distingue mayúsculas ni cantidad de espacios. El valor del parámetro se conserva tal cual porque el exportador lo usará en S5.
+- El **contexto del SUT** forma parte del catálogo (`contexto` en el YAML): son datos de la aplicación objetivo y se versionan junto con sus pasos.
+- Los errores del proveedor (clave, crédito, límite de solicitudes, timeout) no se reintentan, porque repetirlos no los resuelve. Solo se reintentan las respuestas mal formadas.
+- El límite diario cuenta todas las generaciones desde las 00:00 en hora argentina (UTC-3, sin horario de verano). El valor 0 significa sin límite.
+- El modo demo elige la respuesta por el título de la historia. Las respuestas son salidas reales del modelo, guardadas sin retocar.
+- Transiciones de estado declaradas en una tabla única (`TRANSICIONES` en `services/casos.py`), con un 409 y su mensaje por cada transición inválida.
+- Al editar un caso, si queda válido, el título se toma de su línea «Escenario:». Si queda inválido, se conserva el título anterior.
+- Cloudflare Access se activó en S4 para no dejar expuesta la API con una clave de LLM con crédito.
+
+### Próximo
+- S5:
+  - Generador TypeScript (RF-06): `.spec.ts` desde las plantillas del catálogo, con los parámetros escapados como literales.
+  - Runner de Playwright (RF-07).
+  - Resultados con capturas (RF-08).
+- Agregar al catálogo el paso del botón «Cancel» del checkout.
+- Segundo encuentro: mostrar el flujo de punta a punta, desde la historia hasta la ejecución.

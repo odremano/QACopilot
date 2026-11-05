@@ -6,7 +6,7 @@ Casos de uso del MVP de QA Copilot con sus actores (spec, secciones 2.3 y 5). Me
 flowchart LR
     analista["Analista QA<br/>(actor)"]
     admin["Administrador<br/>(actor)"]
-    llm["Proveedor LLM<br/>DeepSeek / Ollama<br/>(sistema externo)"]
+    llm["Proveedor LLM<br/>OpenRouter (DeepSeek)<br/>(sistema externo)"]
     sut["SauceDemo<br/>(sistema externo · SUT)"]
 
     subgraph sistema["QA Copilot"]
