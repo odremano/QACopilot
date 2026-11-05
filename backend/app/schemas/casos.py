@@ -5,6 +5,20 @@ from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validat
 from app.models.estados import EstadoCaso, EstadoGeneracion, TipoCaso
 
 
+class CasoEdicion(BaseModel):
+    gherkin: str = Field(
+        min_length=1,
+        description="Escenario completo: línea «Escenario:» y un paso del catálogo por línea.",
+    )
+
+    @field_validator("gherkin")
+    @classmethod
+    def no_vacio(cls, valor: str) -> str:
+        if not valor.strip():
+            raise ValueError("el Gherkin no puede estar vacío")
+        return valor
+
+
 class CasoSalida(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

@@ -19,6 +19,7 @@ DATOS_INVALIDOS = "Los datos enviados no son válidos."
 MENSAJES_CAMPO = {
     "titulo": "El título es obligatorio.",
     "descripcion": "La descripción es obligatoria.",
+    "gherkin": "El Gherkin del caso no puede estar vacío.",
 }
 TITULO_LARGO = f"El título no puede superar los {TITULO_MAX} caracteres."
 
@@ -116,6 +117,25 @@ def listar_casos(historia_id: int) -> list[dict]:
 def generar_casos(historia_id: int) -> dict:
     """Genera (o regenera) casos con IA. Puede tardar: usa un timeout largo."""
     return _pedir("POST", f"/historias/{historia_id}/generaciones", timeout=TIMEOUT_GENERACION)
+
+
+def editar_caso(caso_id: int, gherkin: str) -> dict:
+    """Guarda el Gherkin de un caso pendiente; el backend lo revalida (RF-05)."""
+    if not gherkin.strip():
+        raise ErrorApi(MENSAJES_CAMPO["gherkin"])
+    return _pedir("PUT", f"/casos/{caso_id}", json={"gherkin": gherkin})
+
+
+def aprobar_caso(caso_id: int) -> dict:
+    return _pedir("POST", f"/casos/{caso_id}/aprobar")
+
+
+def descartar_caso(caso_id: int) -> dict:
+    return _pedir("POST", f"/casos/{caso_id}/descartar")
+
+
+def volver_a_pendiente(caso_id: int) -> dict:
+    return _pedir("POST", f"/casos/{caso_id}/pendiente")
 
 
 def obtener_catalogo() -> dict:
