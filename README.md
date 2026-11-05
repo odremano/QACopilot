@@ -19,7 +19,7 @@ flowchart LR
     be -->|HTTPS| sut["SauceDemo"]
 ```
 
-Más diagramas en [`docs/uml/`](docs/uml/): [casos de uso](docs/uml/casos-de-uso.md), [clases](docs/uml/clases.md), [estados del caso](docs/uml/estados-caso.md), [secuencia de generación y revisión](docs/uml/secuencia-generacion.md) y [despliegue](docs/uml/despliegue.md).
+Más diagramas en [`docs/uml/`](docs/uml/): [casos de uso](docs/uml/casos-de-uso.md), [clases](docs/uml/clases.md), [estados del caso](docs/uml/estados-caso.md), [secuencia de generación y revisión](docs/uml/secuencia-generacion.md), [secuencia de exportación y ejecución](docs/uml/secuencia-ejecucion.md) y [despliegue](docs/uml/despliegue.md).
 
 ## Stack
 
@@ -28,7 +28,7 @@ Más diagramas en [`docs/uml/`](docs/uml/): [casos de uso](docs/uml/casos-de-uso
 | Frontend | Streamlit 1.66 (multipágina con `st.navigation`), httpx |
 | Backend | Python 3.12, FastAPI, Pydantic v2, pydantic-settings, SQLAlchemy 2 (sincrónico), Alembic, psycopg 3, uvicorn |
 | Base de datos | PostgreSQL 16 |
-| Automatización | Playwright Test 1.64 con TypeScript, Chromium headless (imagen oficial de Playwright) |
+| Automatización | Playwright Test 1.64 con TypeScript 7.0 (solo `tsc --noEmit`), Chromium headless (imagen oficial de Playwright) |
 | Calidad | pytest, ruff |
 | Infraestructura | Docker Compose, Dokploy, Cloudflare Tunnel |
 
@@ -108,6 +108,15 @@ Para agregar o cambiar un paso:
 
 El catálogo no se edita desde la interfaz (spec 3.3).
 
+## Exportación y ejecución
+
+- **Exportar** (`GET /historias/{id}/export`, botón «Descargar .spec.ts» en el Detalle): genera `HU-n.spec.ts` con un `test` por caso aprobado y un `test.step` por paso Gherkin. El código sale de las plantillas del catálogo y los valores van como literales escapados.
+- **Ejecutar** (`POST /historias/{id}/ejecuciones`, botón «Ejecutar pruebas»): corre ese mismo archivo en segundo plano contra SauceDemo con Chromium headless. Hay una sola ejecución a la vez, 30 s por test y un tope de 10 minutos.
+- **Resultados** (pantalla Ejecuciones, `GET /ejecuciones/{id}`): cada caso queda aprobado, fallido u omitido, con su duración. Los fallidos muestran el paso que falló y la captura de pantalla (`GET /evidencias/{id}`).
+- Las evidencias de cada ejecución (`.spec.ts`, `reporte.json` y capturas) quedan en el volumen `evidencias`, en `/data/evidencias/ejecuciones/<id>/`.
+
+Para correr un archivo exportado fuera de la aplicación alcanza con un proyecto de Playwright con `baseURL: 'https://www.saucedemo.com'`.
+
 ## Estructura del repositorio
 
 ```
@@ -130,7 +139,7 @@ El catálogo no se edita desde la interfaz (spec 3.3).
 │   ├── catalogo/             # catálogo de pasos de SauceDemo (YAML versionado, RF-02)
 │   ├── prompts/              # prompt de sistema versionado (v1.md)
 │   ├── demo/                 # respuestas pregrabadas del modo demo
-│   ├── playwright/           # proyecto Playwright (smoke en S3, runner en S5)
+│   ├── playwright/           # proyecto Playwright: config, smoke, tsconfig y carpeta de trabajo del runner
 │   └── tests/                # pytest contra PostgreSQL real
 ├── frontend/
 │   ├── Inicio.py             # punto de entrada y navegación
@@ -145,8 +154,8 @@ El catálogo no se edita desde la interfaz (spec 3.3).
 |---|---|---|
 | S3 | Repositorio, Docker Compose, modelo de datos, historias (RF-01), esqueleto de pantallas, spike de Playwright, UML iniciales | ✅ Hecho |
 | S4 | Catálogo de pasos, integración con DeepSeek (vía OpenRouter), generación, validación y revisión humana | ✅ Hecho |
-| S5 | Generador TypeScript, runner de Playwright, resultados con capturas | Pendiente |
-| S6 | Panel y reportes, modo demo, regeneración, historial, Cloudflare Access y límite diario | Pendiente (Cloudflare Access, límite diario, modo demo y regeneración adelantados en S4) |
+| S5 | Generador TypeScript, runner de Playwright, resultados con capturas | ✅ Hecho |
+| S6 | Panel y reportes, modo demo, regeneración, historial, Cloudflare Access y límite diario | Pendiente (Cloudflare Access, límite diario, modo demo y regeneración adelantados en S4; últimas ejecuciones en el Panel, en S5) |
 | S7 | Pruebas, corrección de errores, presentaciones y demo pregrabada | Pendiente |
 | S8 | Verificación final y defensa (26/11/2026) | Pendiente |
 

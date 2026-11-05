@@ -30,6 +30,6 @@ flowchart TB
     be -->|SQL| db
     db --- pgdata
     be --- evidencias
-    be -->|"HTTPS (S4)"| llm
-    be -->|"HTTPS · Chromium headless (S5)"| sut
+    be -->|HTTPS| llm
+    be -->|"HTTPS · Chromium headless"| sut
 ```
