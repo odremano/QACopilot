@@ -34,3 +34,7 @@ evidencias/
 .idea/
 .DS_Store
 *.swp
+
+# Ejecuciones de Playwright en curso (RF-07): el runner las crea y las borra al terminar
+backend/playwright/ejecuciones/
+backend/playwright/_tsc_*/

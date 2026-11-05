@@ -34,3 +34,11 @@ def get_db() -> Iterator[Session]:
 
 
 DbSession = Annotated[Session, Depends(get_db)]
+
+
+def get_fabrica_sesiones() -> sessionmaker[Session]:
+    """Para las tareas en segundo plano, que abren su propia sesión (RF-07)."""
+    return SessionLocal
+
+
+FabricaSesiones = Annotated[sessionmaker[Session], Depends(get_fabrica_sesiones)]

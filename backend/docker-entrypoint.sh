@@ -32,5 +32,8 @@ if [ "${SEED_EXAMPLES:-true}" = "true" ]; then
     python -m app.seed
 fi
 
+echo "Revisando ejecuciones interrumpidas..."
+python -m app.recuperar
+
 echo "Iniciando la API..."
 exec uvicorn app.main:app --host 0.0.0.0 --port 8000

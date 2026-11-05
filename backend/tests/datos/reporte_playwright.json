@@ -1,0 +1,203 @@
+{
+  "suites": [
+    {
+      "title": "_prueba/HU-9.spec.ts",
+      "file": "_prueba/HU-9.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "[HU-9] Prueba",
+          "file": "_prueba/HU-9.spec.ts",
+          "line": 5,
+          "column": 6,
+          "specs": [
+            {
+              "title": "[CP-7] Bloqueado",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 758,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "steps": [
+                        {
+                          "title": "Dado que estoy en la página de inicio de sesión",
+                          "duration": 409
+                        },
+                        {
+                          "title": "Cuando ingreso el usuario \"locked_out_user\"",
+                          "duration": 74
+                        },
+                        {
+                          "title": "Y ingreso la contraseña \"secret_sauce\"",
+                          "duration": 10
+                        },
+                        {
+                          "title": "Y presiono el botón de ingresar",
+                          "duration": 92
+                        },
+                        {
+                          "title": "Entonces veo el mensaje de error \"Epic sadface: Sorry, this user has been locked out.\"",
+                          "duration": 12
+                        }
+                      ],
+                      "startTime": "2026-11-05T17:40:14.265Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a733f5bfb05f06a35fa2-57b52b82f4b085c44d36",
+              "file": "_prueba/HU-9.spec.ts",
+              "line": 6,
+              "column": 7
+            },
+            {
+              "title": "[CP-8] Total incorrecto",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 5911,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-test=\"total-label\"]')\nExpected substring: \u001b[32m\"Total: $\u001b[7m99.9\u001b[27m9\"\u001b[39m\nReceived string:    \u001b[31m\"Total: $\u001b[7m32.3\u001b[27m9\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" locator('[data-test=\"total-label\"]') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-test=\"total-label\"]')\u001b[22m\n\u001b[2m    14 × locator resolved to <div data-test=\"total-label\" class=\"summary_total_label\">Total: $32.39</div>\u001b[22m\n\u001b[2m       - unexpected value \"Total: $32.39\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-test=\"total-label\"]')\nExpected substring: \u001b[32m\"Total: $\u001b[7m99.9\u001b[27m9\"\u001b[39m\nReceived string:    \u001b[31m\"Total: $\u001b[7m32.3\u001b[27m9\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" locator('[data-test=\"total-label\"]') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-test=\"total-label\"]')\u001b[22m\n\u001b[2m    14 × locator resolved to <div data-test=\"total-label\" class=\"summary_total_label\">Total: $32.39</div>\u001b[22m\n\u001b[2m       - unexpected value \"Total: $32.39\"\u001b[22m\n\n    at /app/playwright/_prueba/HU-9.spec.ts:54:63\n    at /app/playwright/_prueba/HU-9.spec.ts:53:5",
+                        "location": {
+                          "file": "/app/playwright/_prueba/HU-9.spec.ts",
+                          "column": 63,
+                          "line": 54
+                        },
+                        "snippet": "  52 |     });\n  53 |     await test.step(\"Entonces veo el total \\\"Total: $99.99\\\"\", async () => {\n> 54 |       await expect(page.locator('[data-test=\"total-label\"]')).toContainText(\"Total: $99.99\");\n     |                                                               ^\n  55 |     });\n  56 |   });\n  57 | });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/app/playwright/_prueba/HU-9.spec.ts",
+                            "column": 63,
+                            "line": 54
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-test=\"total-label\"]')\nExpected substring: \u001b[32m\"Total: $\u001b[7m99.9\u001b[27m9\"\u001b[39m\nReceived string:    \u001b[31m\"Total: $\u001b[7m32.3\u001b[27m9\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" locator('[data-test=\"total-label\"]') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-test=\"total-label\"]')\u001b[22m\n\u001b[2m    14 × locator resolved to <div data-test=\"total-label\" class=\"summary_total_label\">Total: $32.39</div>\u001b[22m\n\u001b[2m       - unexpected value \"Total: $32.39\"\u001b[22m\n\n\n  52 |     });\n  53 |     await test.step(\"Entonces veo el total \\\"Total: $99.99\\\"\", async () => {\n> 54 |       await expect(page.locator('[data-test=\"total-label\"]')).toContainText(\"Total: $99.99\");\n     |                                                               ^\n  55 |     });\n  56 |   });\n  57 | });\n    at /app/playwright/_prueba/HU-9.spec.ts:54:63\n    at /app/playwright/_prueba/HU-9.spec.ts:53:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "steps": [
+                        {
+                          "title": "Dado que inicié sesión como \"standard_user\"",
+                          "duration": 446
+                        },
+                        {
+                          "title": "Cuando agrego al carrito el producto \"Sauce Labs Backpack\"",
+                          "duration": 53
+                        },
+                        {
+                          "title": "Y abro el carrito",
+                          "duration": 49
+                        },
+                        {
+                          "title": "Y presiono el botón de checkout",
+                          "duration": 66
+                        },
+                        {
+                          "title": "Y ingreso el nombre \"Ana\"",
+                          "duration": 48
+                        },
+                        {
+                          "title": "Y ingreso el apellido \"Pérez\"",
+                          "duration": 15
+                        },
+                        {
+                          "title": "Y ingreso el código postal \"1425\"",
+                          "duration": 11
+                        },
+                        {
+                          "title": "Y presiono el botón de continuar",
+                          "duration": 39
+                        },
+                        {
+                          "title": "Entonces veo el total \"Total: $99.99\"",
+                          "duration": 5018,
+                          "error": {
+                            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-test=\"total-label\"]')\nExpected substring: \u001b[32m\"Total: $\u001b[7m99.9\u001b[27m9\"\u001b[39m\nReceived string:    \u001b[31m\"Total: $\u001b[7m32.3\u001b[27m9\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" locator('[data-test=\"total-label\"]') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-test=\"total-label\"]')\u001b[22m\n\u001b[2m    14 × locator resolved to <div data-test=\"total-label\" class=\"summary_total_label\">Total: $32.39</div>\u001b[22m\n\u001b[2m       - unexpected value \"Total: $32.39\"\u001b[22m\n",
+                            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('[data-test=\"total-label\"]')\nExpected substring: \u001b[32m\"Total: $\u001b[7m99.9\u001b[27m9\"\u001b[39m\nReceived string:    \u001b[31m\"Total: $\u001b[7m32.3\u001b[27m9\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" locator('[data-test=\"total-label\"]') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-test=\"total-label\"]')\u001b[22m\n\u001b[2m    14 × locator resolved to <div data-test=\"total-label\" class=\"summary_total_label\">Total: $32.39</div>\u001b[22m\n\u001b[2m       - unexpected value \"Total: $32.39\"\u001b[22m\n\n    at /app/playwright/_prueba/HU-9.spec.ts:54:63\n    at /app/playwright/_prueba/HU-9.spec.ts:53:5",
+                            "location": {
+                              "file": "/app/playwright/_prueba/HU-9.spec.ts",
+                              "column": 63,
+                              "line": 54
+                            },
+                            "snippet": "  52 |     });\n  53 |     await test.step(\"Entonces veo el total \\\"Total: $99.99\\\"\", async () => {\n> 54 |       await expect(page.locator('[data-test=\"total-label\"]')).toContainText(\"Total: $99.99\");\n     |                                                               ^\n  55 |     });\n  56 |   });\n  57 | });"
+                          }
+                        }
+                      ],
+                      "startTime": "2026-11-05T17:40:15.137Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "{SALIDA}/artefactos/_prueba-HU-9--HU-9-Prueba-CP-8-Total-incorrecto-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "{SALIDA}/artefactos/_prueba-HU-9--HU-9-Prueba-CP-8-Total-incorrecto-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/app/playwright/_prueba/HU-9.spec.ts",
+                        "column": 63,
+                        "line": 54
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "a733f5bfb05f06a35fa2-3cb93e1fe88f4b519d12",
+              "file": "_prueba/HU-9.spec.ts",
+              "line": 24,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-05T17:40:13.582Z",
+    "duration": 7622.451999999999,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}
