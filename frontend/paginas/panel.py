@@ -1,7 +1,7 @@
 import streamlit as st
 
 from lib import api, rutas
-from lib.formato import etiqueta_historia, fecha
+from lib.formato import etiqueta_ejecucion, etiqueta_historia, fecha, porcentaje
 
 st.set_page_config(page_title="QA Copilot", layout="wide")
 
@@ -42,4 +42,26 @@ for historia in historias[:5]:
 st.page_link(rutas.HISTORIAS, label="Ver todas las historias")
 
 st.subheader("Últimas ejecuciones")
-st.info("Disponible a partir de S5.")
+try:
+    ejecuciones = api.listar_ejecuciones()
+except api.ErrorApi as error:
+    st.error(error.mensaje)
+    ejecuciones = []
+if not ejecuciones:
+    st.info("Todavía no hay ejecuciones.")
+for ejecucion in ejecuciones[:5]:
+    izquierda, derecha = st.columns([3, 2])
+    izquierda.page_link(
+        rutas.EJECUCIONES,
+        label=etiqueta_ejecucion(ejecucion),
+        query_params={"id": ejecucion["id"]},
+    )
+    if ejecucion["estado"] == "finalizada":
+        derecha.caption(
+            f"{ejecucion['aprobados']} de {ejecucion['total']} aprobados · "
+            f"Éxito: {porcentaje(ejecucion['porcentaje_exito'])}"
+        )
+    elif ejecucion["estado"] == "error":
+        derecha.caption("Terminó con error: revisá el log en su detalle.")
+    else:
+        derecha.caption(f"En curso: {ejecucion['total']} casos.")
