@@ -82,6 +82,7 @@ Si agregás o cambiás el subdominio de la API, actualizá `API_PUBLIC_URL` en D
 - [ ] `https://<api>.ordema.app/salud` responde `{"estado": "ok", "base_de_datos": "ok", ...}`.
 - [ ] `https://<api>.ordema.app/` redirige a `/docs`, que muestra Swagger con las secciones "Historias", "Casos", "Exportación", "Ejecuciones", "Catálogo" y "Salud".
 - [ ] `https://<frontend>.ordema.app` abre el Panel con **3 historias**.
+- [ ] Los logs del backend muestran las migraciones aplicadas hasta `d0d7069ccc61` (o `docker exec <contenedor-backend> alembic current` muestra esa revisión como *head*).
 - [ ] En **Historias**, dar de alta una historia nueva: aparece en el listado con su código `HU-n`.
 - [ ] Intentar guardar sin título: aparece "El título es obligatorio." y no se guarda.
 - [ ] En **Detalle de historia**, "Generar casos con IA" crea entre 3 y 8 casos pendientes y `/salud` muestra `"configurado": true`.
@@ -89,6 +90,8 @@ Si agregás o cambiás el subdominio de la API, actualizá `API_PUBLIC_URL` en D
 - [ ] **Ejecutar pruebas** muestra la ejecución «en curso» y, en unos segundos, el resumen con los casos aprobados. Mientras corre, un segundo intento responde «Ya hay una ejecución en curso».
 - [ ] Con un caso que falla a propósito (por ejemplo, un total incorrecto), **Ejecuciones** muestra el paso que falló y la captura de pantalla.
 - [ ] Después de un redeploy, las ejecuciones anteriores siguen mostrando su captura: el volumen `evidencias` se conserva.
+- [ ] El **Panel** muestra por historia los casos por estado y el resultado de su última ejecución, y la tabla de últimas ejecuciones con aprobados, fallidos y % de éxito. Al seleccionar una fila aparecen los enlaces al Detalle y a la ejecución.
+- [ ] En el **Detalle**, «Historial de generaciones» lista cada generación con fecha, modelo, versión del prompt, duración y resultado, incluidas las fallidas.
 - [ ] **Catálogo** lista los pasos de SauceDemo agrupados (inicio de sesión, inventario, carrito, checkout).
 - [ ] **Acerca de** muestra la base "OK" y el enlace a `/docs` apunta al subdominio público.
 - [ ] Opcional: desde la terminal del servidor, `docker exec <contenedor-backend> sh -c "cd playwright && npx playwright test smoke"` pasa (Chromium funciona en el servidor).

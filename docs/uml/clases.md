@@ -26,6 +26,8 @@ classDiagram
         +Optional~int~ duracion_ms
         +Optional~JSONB~ respuesta_cruda
         +Optional~Text~ mensaje_error
+        +Optional~int~ casos_validos
+        +Optional~int~ casos_invalidos
         +DateTime creada_en
     }
 
@@ -60,7 +62,7 @@ classDiagram
     class ResultadoCaso {
         +int id
         +int ejecucion_id
-        +int caso_id
+        +Optional~int~ caso_id
         +EstadoResultado estado
         +Optional~int~ duracion_ms
         +Optional~Text~ mensaje_error
@@ -102,7 +104,7 @@ classDiagram
     HistoriaUsuario "1" *-- "0..*" Ejecucion : registra
     Generacion "0..1" o-- "0..*" CasoPrueba : produce
     Ejecucion "1" *-- "0..*" ResultadoCaso : incluye
-    CasoPrueba "1" *-- "0..*" ResultadoCaso : obtiene
+    CasoPrueba "0..1" o-- "0..*" ResultadoCaso : obtiene
 
     Generacion ..> EstadoGeneracion
     CasoPrueba ..> TipoCaso
@@ -111,4 +113,6 @@ classDiagram
     ResultadoCaso ..> EstadoResultado
 ```
 
-Composición (`*--`): al borrar la historia se borran en cascada sus generaciones, casos y ejecuciones (`ON DELETE CASCADE`). Agregación (`o--`): si se borra una generación, sus casos se conservan con `generacion_id` en nulo.
+Composición (`*--`): al borrar la historia se borran en cascada sus generaciones, casos y ejecuciones (`ON DELETE CASCADE`). Agregación (`o--`): si se borra una generación, sus casos se conservan con `generacion_id` en nulo. Lo mismo pasa con los resultados: si al regenerar (RF-11) se borra un caso pendiente que ya se había ejecutado, sus resultados se conservan con `caso_id` en nulo (`ON DELETE SET NULL`), así las ejecuciones pasadas no pierden filas.
+
+`casos_validos` y `casos_invalidos` se guardan al generar (RF-12), porque editar o regenerar cambia los casos pero no debe cambiar el historial. Son nulos en las generaciones anteriores a S6.

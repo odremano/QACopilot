@@ -40,7 +40,7 @@ sequenceDiagram
         end
     end
 
-    GEN->>DB: INSERT generacion (intentos crudos, duración, estado)
+    GEN->>DB: INSERT generacion (intentos crudos, duración, estado,<br/>cantidad de casos válidos e inválidos)
     alt la generación falló
         GEN-->>FE: 502 {"detalle": "... Se intentó 3 veces."}
         FE-->>QA: mensaje de error
@@ -53,7 +53,9 @@ sequenceDiagram
     end
 ```
 
-Un caso es inválido cuando un paso no coincide con ningún patrón del catálogo, aunque el JSON sea correcto. Queda guardado igual, con sus errores, para que la persona lo corrija o lo descarte. Al regenerar se conservan los casos aprobados y descartados (RF-11).
+Un caso es inválido cuando un paso no coincide con ningún patrón del catálogo, aunque el JSON sea correcto. Queda guardado igual, con sus errores, para que la persona lo corrija o lo descarte. Al regenerar se conservan los casos aprobados y descartados (RF-11). Si un pendiente que se borra ya se había ejecutado, sus resultados quedan en la ejecución con el caso en nulo.
+
+Cada generación, también las fallidas, se puede consultar con `GET /historias/{id}/generaciones` (RF-12). En el Detalle aparece en el desplegable «Historial de generaciones».
 
 ## Revisión humana (RF-05)
 
