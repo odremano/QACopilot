@@ -3,6 +3,7 @@
 
 import json
 
+import httpx
 import pytest
 from sqlalchemy import select
 
@@ -11,7 +12,8 @@ from app.main import app
 from app.models import CasoPrueba, Generacion
 from app.models.estados import EstadoCaso
 from app.seed import HISTORIAS_EJEMPLO
-from app.services.llm import ErrorProveedor, obtener_proveedor
+from app.services import llm
+from app.services.llm import ErrorProveedor, nombre_archivo_demo, obtener_proveedor
 
 HISTORIA = {
     "titulo": "Inicio de sesión",
@@ -263,6 +265,29 @@ def test_regenerar_conserva_aprobados_y_descartados_y_reemplaza_pendientes(
     ]
 
 
+def test_regenerar_con_dos_aprobados_y_tres_pendientes(client, usar_proveedor, historia_id):
+    """CA-11 al pie de la letra: 2 aprobados se conservan y 3 pendientes se reemplazan."""
+    cinco = _respuesta(
+        ("Ingreso 1", "positivo", INGRESO),
+        ("Bloqueado 1", "negativo", BLOQUEADO),
+        ("Ingreso 2", "positivo", INGRESO),
+        ("Bloqueado 2", "negativo", BLOQUEADO),
+        ("Ingreso 3", "positivo", INGRESO),
+    )
+    usar_proveedor(cinco, VALIDA)
+    _generar(client, historia_id)
+    aprobados = [client.post(f"/casos/{caso_id}/aprobar").json() for caso_id in (1, 3)]
+
+    nuevos = _generar(client, historia_id).json()["casos"]
+
+    casos = client.get(f"/historias/{historia_id}/casos").json()
+    assert [c for c in casos if c["estado"] == "aprobado"] == aprobados
+    pendientes = [c for c in casos if c["estado"] == "pendiente"]
+    assert [c["id"] for c in pendientes] == [c["id"] for c in nuevos] == [6, 7, 8]
+    assert {c["generacion_id"] for c in pendientes} == {2}
+    assert not {2, 4, 5} & {c["id"] for c in casos}
+
+
 def test_si_la_regeneracion_falla_los_casos_anteriores_se_conservan(
     client, usar_proveedor, historia_id
 ):
@@ -389,6 +414,37 @@ def test_modo_demo_con_historia_sin_respuesta_pregrabada(client, historia_id, mo
 
     assert respuesta.status_code == 502
     assert "solo tiene respuestas para las historias de ejemplo" in respuesta.json()["detalle"]
+
+
+def test_modo_demo_no_usa_la_red(client, monkeypatch):
+    """CA-10: se obtienen los casos sin llamar al proveedor del LLM."""
+
+    def sin_red(*args, **kwargs):
+        raise AssertionError("El modo demo no debe hacer pedidos HTTP")
+
+    # Se bloquea el transporte real (el TestClient usa el suyo, que no sale a la red).
+    monkeypatch.setattr(httpx.HTTPTransport, "handle_request", sin_red)
+    monkeypatch.setattr(settings, "llm_provider", "demo")
+    historia_id = client.post("/historias", json=HISTORIAS_EJEMPLO[0]).json()["id"]
+
+    respuesta = _generar(client, historia_id)
+
+    assert respuesta.status_code == 201, respuesta.json()
+    assert respuesta.json()["casos"]
+
+
+def test_modo_demo_pasa_por_la_misma_validacion(client, historia_id, monkeypatch, tmp_path):
+    """RF-10: las respuestas pregrabadas se validan igual que las del LLM."""
+    (tmp_path / f"{nombre_archivo_demo(HISTORIA['titulo'])}.json").write_text(VALIDA)
+    monkeypatch.setattr(llm, "RUTA_DEMO", tmp_path)
+    monkeypatch.setattr(settings, "llm_provider", "demo")
+
+    cuerpo = _generar(client, historia_id).json()
+
+    assert (cuerpo["casos_validos"], cuerpo["casos_invalidos"]) == (2, 1)
+    assert cuerpo["casos"][2]["errores_validacion"] == [
+        "Paso 2: «Cuando hago magia» no coincide con ningún paso del catálogo."
+    ]
 
 
 @pytest.mark.parametrize("ejemplo", HISTORIAS_EJEMPLO, ids=lambda h: h["titulo"])

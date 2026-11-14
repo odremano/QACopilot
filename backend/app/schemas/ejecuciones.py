@@ -51,7 +51,9 @@ class ResultadoSalida(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    caso: CasoReferencia
+    caso: CasoReferencia | None = Field(
+        description="Nulo si el caso se reemplazó al regenerar (RF-11); el resultado se conserva."
+    )
     estado: EstadoResultado
     duracion_ms: int | None
     mensaje_error: str | None

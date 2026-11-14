@@ -21,8 +21,10 @@ class ResultadoCaso(Base):
     ejecucion_id: Mapped[int] = mapped_column(
         ForeignKey("ejecucion.id", ondelete="CASCADE"), index=True
     )
-    caso_id: Mapped[int] = mapped_column(
-        ForeignKey("caso_prueba.id", ondelete="CASCADE"), index=True
+    # SET NULL: si al regenerar (RF-11) se borra un caso que ya se ejecutó, el resultado se
+    # conserva (estado, error y captura) para no alterar ejecuciones pasadas.
+    caso_id: Mapped[int | None] = mapped_column(
+        ForeignKey("caso_prueba.id", ondelete="SET NULL"), index=True
     )
     estado: Mapped[str] = mapped_column(String(20))
     duracion_ms: Mapped[int | None] = mapped_column(Integer)
@@ -30,4 +32,4 @@ class ResultadoCaso(Base):
     ruta_captura: Mapped[str | None] = mapped_column(String(500))
 
     ejecucion: Mapped[Ejecucion] = relationship(back_populates="resultados")
-    caso: Mapped[CasoPrueba] = relationship(back_populates="resultados")
+    caso: Mapped[CasoPrueba | None] = relationship(back_populates="resultados")

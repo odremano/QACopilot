@@ -47,7 +47,7 @@ class CasoPrueba(Base):
     historia: Mapped[HistoriaUsuario] = relationship(back_populates="casos")
     generacion: Mapped[Generacion | None] = relationship(back_populates="casos")
     resultados: Mapped[list[ResultadoCaso]] = relationship(
-        back_populates="caso", cascade="all, delete-orphan", passive_deletes=True
+        back_populates="caso", passive_deletes=True
     )
 
     @property

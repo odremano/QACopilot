@@ -76,5 +76,5 @@ def etiqueta_ejecucion(ejecucion: dict) -> str:
 
 def etiqueta_resultado(resultado: dict) -> str:
     estado = ESTADOS_RESULTADO.get(resultado["estado"], resultado["estado"])
-    caso = resultado["caso"]
+    caso = resultado["caso"] or {"codigo": "—", "titulo": "Caso reemplazado al regenerar"}
     return f"{caso['codigo']} · {caso['titulo']} — {estado} · {segundos(resultado['duracion_ms'])}"
