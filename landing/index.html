@@ -1,0 +1,1490 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- ============================================================
+       Meta, Open Graph y favicon
+       ============================================================ -->
+  <title>Casewright · De la historia de usuario a pruebas automatizadas</title>
+  <meta name="description" content="Casewright genera casos de prueba en Gherkin con IA a partir de historias de usuario, los pasa por revisión humana y los convierte en pruebas de Playwright con resultados y evidencias.">
+  <meta name="theme-color" content="#1F37B5">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Casewright">
+  <meta property="og:locale" content="es_AR">
+  <meta property="og:title" content="Casewright · De la historia de usuario a pruebas automatizadas">
+  <meta property="og:description" content="La IA propone casos de prueba en Gherkin, el sistema los valida y tu equipo decide. Los casos aprobados se convierten en pruebas de Playwright.">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Casewright · De la historia de usuario a pruebas automatizadas">
+  <meta name="twitter:description" content="Casos de prueba con IA, revisión humana y automatización con Playwright.">
+  <!-- Favicon: isotipo "escuadra-check" (tarjeta de caso con esquina plegada + check de trazos rectos) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M8 1h15l8 8v15a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7V8a7 7 0 0 1 7-7z' fill='%231F37B5'/%3E%3Cpath d='M23 1v8h8z' fill='%2393B0FB'/%3E%3Cpath d='M8.5 16.5l5 5L23 12' fill='none' stroke='%23fff' stroke-width='3.4' stroke-linecap='square'/%3E%3C/svg%3E">
+
+  <!-- Marca la página como "con JS" para que las animaciones de aparición no oculten contenido sin JavaScript -->
+  <script>document.documentElement.classList.add('js');</script>
+
+  <!-- ============================================================
+       Tipografías: Plus Jakarta Sans (títulos), Inter (cuerpo), JetBrains Mono (código)
+       ============================================================ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap">
+
+  <!-- ============================================================
+       Tailwind (Play CDN) + tokens de marca definidos una sola vez
+       ============================================================ -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            // Azul confianza: acento principal
+            brand: {
+              50: '#EEF3FF', 100: '#DCE6FE', 200: '#BFD0FD', 300: '#93B0FB', 400: '#6088F6',
+              500: '#3B63EE', 600: '#2747D9', 700: '#1F37B5', 800: '#1E3192', 900: '#1D2D74', 950: '#141C47'
+            },
+            // Texto: títulos, cuerpo y secundario (todos pasan AA sobre blanco y sobre surface.alt)
+            ink: { DEFAULT: '#0B1220', soft: '#475467', muted: '#5B6475' },
+            // Fondos y bordes
+            surface: { DEFAULT: '#FFFFFF', alt: '#F5F7FA', line: '#E4E8EF' },
+            // Semánticos: solo para estados y resultados
+            ok:   { 50: '#ECFDF3', 200: '#ABEFC6', 700: '#067647' },
+            fail: { 50: '#FEF3F2', 200: '#FECDCA', 700: '#B42318' },
+            warn: { 50: '#FFFAEB', 200: '#FEDF89', 700: '#B54708' }
+          },
+          fontFamily: {
+            display: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+            sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace']
+          },
+          borderRadius: { card: '14px', ctl: '10px' },
+          boxShadow: {
+            card: '0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.06)',
+            lift: '0 12px 24px -8px rgba(16,24,40,.14), 0 4px 8px -4px rgba(16,24,40,.06)',
+            window: '0 28px 56px -16px rgba(20,28,71,.22), 0 2px 6px rgba(16,24,40,.06)'
+          },
+          maxWidth: { page: '1200px' }
+        }
+      }
+    };
+  </script>
+
+  <style type="text/tailwindcss">
+    /* ---------- Base ---------- */
+    @layer base {
+      html { scroll-padding-top: 5.5rem; }
+      body { @apply bg-white font-sans text-ink-soft antialiased; }
+      h1, h2, h3 { @apply font-display text-ink; text-wrap: balance; }
+      /* Plus Jakarta trae un espacio entre palabras estrecho: se compensa en todos los usos */
+      .font-display, h1, h2, h3 { letter-spacing: -0.01em; word-spacing: 0.08em; }
+      :focus-visible { @apply outline outline-2 outline-offset-2 outline-brand-600; }
+    }
+
+    /* ---------- Componentes (un único sistema de espaciado, radios y sombras) ---------- */
+    @layer components {
+      .container-page { @apply mx-auto w-full max-w-page px-4 sm:px-6 lg:px-8; }
+      .section { @apply py-20 sm:py-24 lg:py-28; }
+      .eyebrow { @apply inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-sm font-semibold text-brand-800 ring-1 ring-inset ring-brand-100; }
+      .h2 { @apply text-3xl font-bold sm:text-4xl; }
+      .lead { @apply mt-4 text-lg leading-relaxed; }
+
+      .btn { @apply inline-flex items-center justify-center gap-2 rounded-ctl px-5 py-3 text-base font-semibold transition duration-200 ease-out; }
+      .btn-primary { @apply bg-brand-700 text-white shadow-card hover:-translate-y-px hover:bg-brand-800 hover:shadow-lift; }
+      .btn-secondary { @apply bg-white text-ink shadow-card ring-1 ring-inset ring-surface-line hover:-translate-y-px hover:text-brand-800 hover:ring-brand-300; }
+      .btn-sm { @apply px-4 py-2 text-sm; }
+
+      .card { @apply rounded-card border border-surface-line bg-white shadow-card; }
+      .card-hover { @apply transition duration-200 ease-out hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift; }
+      .icon-box { @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-ctl bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-100; }
+
+      .badge { @apply inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset; }
+      .badge-ok { @apply bg-ok-50 text-ok-700 ring-ok-200; }
+      .badge-warn { @apply bg-warn-50 text-warn-700 ring-warn-200; }
+      .badge-fail { @apply bg-fail-50 text-fail-700 ring-fail-200; }
+      .badge-neutral { @apply bg-surface-alt text-ink-muted ring-surface-line; }
+      .tag { @apply inline-flex items-center whitespace-nowrap rounded-md bg-brand-50 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-brand-800; }
+
+      /* Mockups de la app */
+      .window { @apply overflow-hidden rounded-card border border-surface-line bg-white shadow-window; }
+      .window-bar { @apply flex items-center gap-3 border-b border-surface-line bg-surface-alt px-4 py-2.5; }
+      .window-dot { @apply h-2.5 w-2.5 rounded-full bg-[#D0D5DD]; }
+      .mock-btn { @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset ring-surface-line bg-white text-ink transition duration-150; }
+      .mock-btn-primary { @apply bg-brand-700 text-white ring-brand-700; }
+      .mock-label { @apply text-xs font-semibold text-ink; }
+      .mock-field { @apply mt-1.5 rounded-ctl border border-surface-line bg-white px-3 py-2 text-sm text-ink; }
+      .side-item { @apply flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-ink-soft; }
+      .side-item.is-active { @apply bg-brand-50 text-brand-800; }
+      .code-light { @apply overflow-x-auto whitespace-pre-wrap break-words font-mono text-[12.5px] leading-6 text-ink; }
+
+      /* Formulario */
+      .field-label { @apply block text-sm font-semibold text-ink; }
+      .field-input { @apply mt-1.5 block w-full rounded-ctl border border-surface-line bg-white px-3.5 py-2.5 text-base text-ink shadow-card transition placeholder:text-ink-muted hover:border-brand-300 focus:border-brand-600; }
+      .field-input[aria-invalid="true"] { @apply border-fail-700; }
+      .field-error { @apply mt-1.5 flex items-start gap-1.5 text-sm font-medium text-fail-700; }
+    }
+  </style>
+
+  <style>
+    /* ---------- Resaltado de sintaxis ---------- */
+    /* El atributo hidden siempre gana sobre las clases de display de Tailwind */
+    [hidden] { display: none !important; }
+    /* En el código se ve cada carácter tal cual (sin ligaduras: => no se convierte en ⇒) */
+    code, pre { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+
+    .gk-kw  { color: #1F37B5; font-weight: 600; }   /* Gherkin: palabras clave en color de marca */
+    .gk-str { color: #0E7490; }                    /* textos entre comillas */
+    .gk-num { color: #0E7490; font-weight: 500; }
+    .gk-com { color: #5B6475; font-style: italic; }
+    .ts-kw  { color: #93B0FB; font-weight: 500; }  /* TypeScript sobre fondo brand-950 */
+    .ts-str { color: #7DD3FC; }
+    .ts-com { color: #9AA4C4; font-style: italic; }
+    .ts-fn  { color: #E8EDFF; font-weight: 500; }
+    .ts-obj { color: #BFD0FD; }
+
+    /* ---------- Aparición al hacer scroll (solo si el usuario no pidió menos movimiento) ---------- */
+    @media (prefers-reduced-motion: no-preference) {
+      html { scroll-behavior: smooth; }
+      .js .reveal { opacity: 0; transform: translateY(14px); transition: opacity .6s ease-out, transform .6s ease-out; }
+      .js .reveal.is-visible { opacity: 1; transform: none; }
+    }
+
+    /* ---------- Navbar ---------- */
+    .site-header { transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease; }
+    .site-header.is-scrolled { border-color: #E4E8EF; box-shadow: 0 1px 2px rgba(16,24,40,.05); }
+
+    /* ---------- Demo animada ---------- */
+    .demo-tab[aria-selected="true"] .demo-num { background: #1F37B5; color: #fff; border-color: #1F37B5; box-shadow: 0 0 0 4px #DCE6FE; }
+    .demo-tab[aria-selected="true"] .demo-label { color: #0B1220; }
+    .demo-tab[data-done="true"] .demo-num { background: #EEF3FF; color: #1E3192; border-color: #BFD0FD; }
+    .demo-tab[data-done="true"] .demo-num-text { display: none; }
+    .demo-tab[data-done="true"] .demo-num-check { display: block; }
+    .demo-num-check { display: none; }
+    .demo-bar-fill { transform-origin: left; transition: transform .5s ease; }
+
+    .demo-item { transition: opacity .45s ease, transform .45s ease; }
+    .demo-item.is-hidden { opacity: 0; transform: translateY(10px); }
+    .demo-hidden { display: none !important; }
+    .caret { display: inline-block; width: 2px; height: 1.1em; margin-left: 1px; vertical-align: text-bottom; background: #1F37B5; animation: caret 1s steps(1) infinite; }
+    .caret-light { background: #93B0FB; }
+    @keyframes caret { 50% { opacity: 0; } }
+
+    .demo-cursor { position: absolute; top: 0; left: 0; z-index: 20; pointer-events: none; transition: transform .7s cubic-bezier(.4,.1,.2,1), opacity .3s ease; will-change: transform; }
+    .demo-cursor.is-click svg { transform: scale(.82); }
+    .demo-cursor svg { transition: transform .12s ease; transform-origin: 3px 2px; }
+    .mock-btn.is-pressed { box-shadow: 0 0 0 3px #BFD0FD; transform: scale(.96); }
+
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .row-flash { animation: flash 1s ease; }
+    @keyframes flash { 0% { background: #EEF3FF; } 100% { background: transparent; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+      .caret { display: none; }
+    }
+
+    /* Detalles del acordeón */
+    details > summary { list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+    details[open] .faq-chevron { transform: rotate(180deg); }
+  </style>
+</head>
+
+<body>
+  <a href="#contenido" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-ctl focus:bg-white focus:px-4 focus:py-2 focus:font-semibold focus:text-brand-800 focus:shadow-lift">Saltar al contenido</a>
+
+  <!-- ============================================================
+       5.1 NAVBAR
+       ============================================================ -->
+  <header id="inicio" class="site-header sticky top-0 z-50 border-b border-transparent bg-white/95 backdrop-blur-sm">
+    <nav class="container-page flex h-16 items-center justify-between gap-4" aria-label="Principal">
+      <a href="#inicio" class="flex items-center gap-2.5 rounded-lg" aria-label="Casewright, ir al inicio">
+        <!-- Isotipo: tarjeta de caso con la esquina plegada y un check de trazos rectos, como hecho con escuadra -->
+        <svg class="h-8 w-8" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M8 1h15l8 8v15a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7V8a7 7 0 0 1 7-7z" fill="#1F37B5"/>
+          <path d="M23 1v8h8z" fill="#93B0FB"/>
+          <path d="M8.5 16.5l5 5L23 12" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="square"/>
+        </svg>
+        <span class="font-display text-xl font-bold tracking-tight text-ink">Case<span class="text-brand-700">wright</span></span>
+      </a>
+
+      <ul class="hidden items-center gap-1 lg:flex">
+        <li><a href="#como-funciona" class="rounded-lg px-3 py-2 text-sm font-medium text-ink-soft transition hover:bg-surface-alt hover:text-ink">Cómo funciona</a></li>
+        <li><a href="#equipos" class="rounded-lg px-3 py-2 text-sm font-medium text-ink-soft transition hover:bg-surface-alt hover:text-ink">Para equipos</a></li>
+        <li><a href="#funcionalidades" class="rounded-lg px-3 py-2 text-sm font-medium text-ink-soft transition hover:bg-surface-alt hover:text-ink">Funcionalidades</a></li>
+        <li><a href="#preguntas" class="rounded-lg px-3 py-2 text-sm font-medium text-ink-soft transition hover:bg-surface-alt hover:text-ink">Preguntas</a></li>
+      </ul>
+
+      <div class="flex items-center gap-2">
+        <a href="#acceso" class="btn btn-primary btn-sm hidden sm:inline-flex">Solicitar acceso</a>
+        <button id="menu-toggle" type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-ctl text-ink ring-1 ring-inset ring-surface-line transition hover:bg-surface-alt lg:hidden" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu-mobile">
+          <svg data-icon="open" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          <svg data-icon="close" class="hidden h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Menú mobile -->
+    <div id="menu-mobile" class="hidden border-t border-surface-line bg-white lg:hidden">
+      <ul class="container-page flex flex-col gap-1 py-4">
+        <li><a href="#como-funciona" class="block rounded-lg px-3 py-3 font-medium text-ink hover:bg-surface-alt">Cómo funciona</a></li>
+        <li><a href="#equipos" class="block rounded-lg px-3 py-3 font-medium text-ink hover:bg-surface-alt">Para equipos</a></li>
+        <li><a href="#funcionalidades" class="block rounded-lg px-3 py-3 font-medium text-ink hover:bg-surface-alt">Funcionalidades</a></li>
+        <li><a href="#preguntas" class="block rounded-lg px-3 py-3 font-medium text-ink hover:bg-surface-alt">Preguntas</a></li>
+        <li class="pt-2"><a href="#acceso" class="btn btn-primary w-full">Solicitar acceso</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="contenido">
+
+    <!-- ============================================================
+         5.2 HERO
+         Alternativas de titular:
+           1. "De la historia de usuario a la prueba automatizada. Con IA, bajo tu control."  ← elegida
+           2. "La IA propone los casos. Tu equipo decide qué se ejecuta."
+           3. "Casos de prueba construidos con precisión, de la historia a Playwright."
+         ============================================================ -->
+    <section class="relative overflow-hidden" aria-labelledby="hero-titulo">
+      <!-- Fondo: degradado muy sutil dentro de la familia de azules + retícula de "plano" -->
+      <div class="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-brand-50/70 via-white to-white" aria-hidden="true"></div>
+      <svg class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[520px] w-full text-brand-100 [mask-image:linear-gradient(to_bottom,black,transparent)]" aria-hidden="true">
+        <defs><pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="currentColor" stroke-width="1"/></pattern></defs>
+        <rect width="100%" height="100%" fill="url(#grid)"/>
+      </svg>
+
+      <div class="container-page grid items-center gap-14 pb-20 pt-14 sm:pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-12 lg:pb-28 lg:pt-24">
+        <div class="reveal min-w-0">
+          <p class="eyebrow">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            Gherkin + Playwright, con revisión humana
+          </p>
+          <h1 id="hero-titulo" class="mt-6 text-4xl font-extrabold leading-[1.1] sm:text-5xl lg:text-[3.4rem]">
+            De la historia de usuario a la prueba automatizada. <span class="text-brand-700">Con IA, bajo tu control.</span>
+          </h1>
+          <p class="lead max-w-xl">
+            Carga una historia de usuario, revisa los casos en Gherkin que propone la IA y convierte los que apruebes en pruebas de Playwright, con resultados y evidencias de cada ejecución.
+          </p>
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+            <a href="#acceso" class="btn btn-primary">Solicitar acceso</a>
+            <a href="#como-funciona" class="btn btn-secondary">
+              Ver cómo funciona
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+            </a>
+          </div>
+          <ul class="mt-10 flex flex-col gap-3 text-sm font-medium text-ink-soft sm:flex-row sm:flex-wrap sm:gap-x-6">
+            <li class="flex items-center gap-2">
+              <svg class="h-5 w-5 shrink-0 text-brand-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9.5" cy="8" r="3.5"/><path d="M3.5 19.5c.8-3.2 3.2-5 6-5s5.2 1.8 6 5M15.5 11l2 2 3.5-4"/></svg>
+              Nada se ejecuta sin tu aprobación
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="h-5 w-5 shrink-0 text-brand-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6.5h10M10 12h10M10 17.5h10M3.5 6.5l1.5 1.5 2.5-3M3.5 12l1.5 1.5 2.5-3M3.5 17.5l1.5 1.5 2.5-3"/></svg>
+              Casos en Gherkin, en español
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="h-5 w-5 shrink-0 text-brand-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 8L4.5 12l4 4M15.5 8l4 4-4 4M13.5 5.5l-3 13"/></svg>
+              Scripts de Playwright en TypeScript
+            </li>
+          </ul>
+        </div>
+
+        <!-- Vista previa del producto (mockup hecho con HTML/CSS) -->
+        <div class="reveal min-w-0" aria-label="Vista previa del panel de Casewright" role="img">
+          <div class="window" aria-hidden="true">
+            <div class="window-bar">
+              <span class="flex gap-1.5"><span class="window-dot"></span><span class="window-dot"></span><span class="window-dot"></span></span>
+              <span class="truncate text-xs font-medium text-ink-muted">Casewright · Historias · HU-7</span>
+            </div>
+            <div class="flex">
+              <!-- Sidebar mínima -->
+              <div class="hidden w-44 shrink-0 border-r border-surface-line bg-white p-3 sm:block">
+                <p class="px-2.5 pb-2 text-[11px] font-semibold uppercase tracking-wider text-ink-muted">Proyecto</p>
+                <div class="space-y-0.5">
+                  <span class="side-item"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M7 16.5V11M12 16.5V6.5M17 16.5v-4"/></svg>Panel</span>
+                  <span class="side-item is-active"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3.5H7.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8z"/><path d="M14 3.5V8h4.5M9 12.5h6M9 16h4"/></svg>Historias</span>
+                  <span class="side-item"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M10 8.8v6.4l5.2-3.2z"/></svg>Ejecuciones</span>
+                </div>
+              </div>
+              <!-- Contenido -->
+              <div class="min-w-0 flex-1 bg-surface-alt/60 p-4 sm:p-5">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="font-mono text-xs font-semibold text-brand-700">HU-7</span>
+                  <span class="badge badge-neutral">4 casos</span>
+                </div>
+                <p class="mt-1.5 font-display text-base font-bold text-ink sm:text-lg">Transferencia entre cuentas propias</p>
+                <p class="mt-1 line-clamp-2 text-xs leading-5 text-ink-soft">Como cliente del home banking, quiero transferir dinero entre mis cuentas propias para mover fondos sin ir a una sucursal.</p>
+
+                <div class="mt-4 flex items-center justify-between">
+                  <p class="text-xs font-semibold text-ink">Casos generados</p>
+                  <span class="text-[11px] font-medium text-ink-muted">Revisados por una persona</span>
+                </div>
+                <ul class="mt-2 space-y-2">
+                  <li class="flex items-center gap-3 rounded-ctl border border-surface-line bg-white px-3 py-2.5">
+                    <div class="min-w-0 flex-1">
+                      <p class="truncate text-[13px] font-semibold text-ink"><span class="font-mono text-brand-700">CP-21</span> Transferencia exitosa con saldo suficiente</p>
+                      <span class="tag mt-1">Positivo</span>
+                    </div>
+                    <span class="badge badge-ok"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Aprobado</span>
+                  </li>
+                  <li class="flex items-center gap-3 rounded-ctl border border-surface-line bg-white px-3 py-2.5">
+                    <div class="min-w-0 flex-1">
+                      <p class="truncate text-[13px] font-semibold text-ink"><span class="font-mono text-brand-700">CP-22</span> Monto mayor al saldo disponible</p>
+                      <span class="tag mt-1">Negativo</span>
+                    </div>
+                    <span class="badge badge-ok"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Aprobado</span>
+                  </li>
+                  <li class="flex items-center gap-3 rounded-ctl border border-warn-200 bg-white px-3 py-2.5">
+                    <div class="min-w-0 flex-1">
+                      <p class="truncate text-[13px] font-semibold text-ink"><span class="font-mono text-brand-700">CP-23</span> Monto igual a cero</p>
+                      <span class="tag mt-1">Valor límite</span>
+                    </div>
+                    <span class="badge badge-warn"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Pendiente</span>
+                  </li>
+                  <li class="flex items-center gap-3 rounded-ctl border border-surface-line bg-white px-3 py-2.5">
+                    <div class="min-w-0 flex-1">
+                      <p class="truncate text-[13px] font-semibold text-ink-muted line-through decoration-ink-muted/50"><span class="font-mono">CP-24</span> Transferencia a la misma cuenta</p>
+                      <span class="tag mt-1">Negativo</span>
+                    </div>
+                    <span class="badge badge-neutral"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>Descartado</span>
+                  </li>
+                </ul>
+
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-surface-line pt-4">
+                  <span class="flex items-center gap-1.5 text-[11px] font-medium text-ink-soft">
+                    <svg class="h-4 w-4 text-ok-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l7 2.8v5.2c0 4.3-2.9 7.6-7 9-4.1-1.4-7-4.7-7-9V6.3z"/><path d="M9 12l2 2 4-4"/></svg>
+                    Validados contra el catálogo
+                  </span>
+                  <span class="flex gap-2">
+                    <span class="mock-btn"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 8L4.5 12l4 4M15.5 8l4 4-4 4"/></svg>Exportar</span>
+                    <span class="mock-btn mock-btn-primary"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l10.5-6.5z"/></svg>Ejecutar</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         5.3 EL PROBLEMA
+         ============================================================ -->
+    <section class="section border-y border-surface-line bg-surface-alt" aria-labelledby="problema-titulo">
+      <div class="container-page">
+        <div class="reveal max-w-2xl">
+          <p class="text-sm font-semibold uppercase tracking-wider text-brand-700">El problema</p>
+          <h2 id="problema-titulo" class="h2 mt-3">Lo que hoy frena el diseño y la automatización de pruebas</h2>
+          <p class="lead">Escribir casos y después automatizarlos son dos trabajos manuales, uno detrás del otro.</p>
+        </div>
+        <div class="mt-12 grid gap-5 md:grid-cols-3">
+          <article class="reveal card card-hover p-6">
+            <span class="icon-box"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span>
+            <h3 class="mt-5 text-lg font-bold">Diseñar casos a mano es lento</h3>
+            <p class="mt-2 leading-relaxed">Cada historia exige redactar escenarios uno por uno. Es un trabajo repetitivo que consume horas de tu equipo.</p>
+          </article>
+          <article class="reveal card card-hover p-6">
+            <span class="icon-box"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17.5v.01"/></svg></span>
+            <h3 class="mt-5 text-lg font-bold">Los negativos y los bordes se olvidan</h3>
+            <p class="mt-2 leading-relaxed">Con poco tiempo se prueba el camino feliz. Los errores esperados y los valores límite quedan afuera.</p>
+          </article>
+          <article class="reveal card card-hover p-6">
+            <span class="icon-box"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 8L4.5 12l4 4M15.5 8l4 4-4 4M13.5 5.5l-3 13"/></svg></span>
+            <h3 class="mt-5 text-lg font-bold">Automatizar es otro proyecto</h3>
+            <p class="mt-2 leading-relaxed">Pasar de casos escritos a scripts ejecutables pide tiempo extra y conocer a fondo Playwright.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         5.4 CÓMO FUNCIONA: DEMO ANIMADA
+         ============================================================ -->
+    <section id="como-funciona" class="section" aria-labelledby="demo-titulo">
+      <div class="container-page">
+        <div class="reveal mx-auto max-w-2xl text-center">
+          <p class="text-sm font-semibold uppercase tracking-wider text-brand-700">Cómo funciona</p>
+          <h2 id="demo-titulo" class="h2 mt-3">De la historia a los resultados, en cinco pasos</h2>
+          <p class="lead">Mira el flujo completo con un ejemplo ficticio de home banking. Puedes pausar la demo o saltar a cualquier paso.</p>
+        </div>
+
+        <div id="demo" class="reveal mx-auto mt-12 min-w-0 max-w-5xl">
+          <!-- Indicador de progreso (tabs) -->
+          <div class="relative">
+            <div class="absolute left-[10%] right-[10%] top-5 h-0.5 rounded bg-surface-line" aria-hidden="true">
+              <div id="demo-bar" class="demo-bar-fill h-full rounded bg-brand-600" style="transform: scaleX(0)"></div>
+            </div>
+            <div role="tablist" aria-label="Pasos de la demo" class="relative grid grid-cols-5 gap-1">
+              <button type="button" role="tab" id="demo-tab-0" aria-controls="demo-panel-0" aria-selected="true" class="demo-tab group flex flex-col items-center gap-2 rounded-ctl px-1 py-1 text-center" data-demo-tab>
+                <span class="demo-num flex h-10 w-10 items-center justify-center rounded-full border border-surface-line bg-white font-display text-sm font-bold text-ink-soft transition group-hover:border-brand-300">
+                  <span class="demo-num-text">1</span>
+                  <svg class="demo-num-check h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                </span>
+                <span class="demo-label sr-only text-sm font-semibold text-ink-soft sm:not-sr-only">Historia</span>
+              </button>
+              <button type="button" role="tab" id="demo-tab-1" aria-controls="demo-panel-1" aria-selected="false" tabindex="-1" class="demo-tab group flex flex-col items-center gap-2 rounded-ctl px-1 py-1 text-center" data-demo-tab>
+                <span class="demo-num flex h-10 w-10 items-center justify-center rounded-full border border-surface-line bg-white font-display text-sm font-bold text-ink-soft transition group-hover:border-brand-300">
+                  <span class="demo-num-text">2</span>
+                  <svg class="demo-num-check h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                </span>
+                <span class="demo-label sr-only text-sm font-semibold text-ink-soft sm:not-sr-only">Casos Gherkin</span>
+              </button>
+              <button type="button" role="tab" id="demo-tab-2" aria-controls="demo-panel-2" aria-selected="false" tabindex="-1" class="demo-tab group flex flex-col items-center gap-2 rounded-ctl px-1 py-1 text-center" data-demo-tab>
+                <span class="demo-num flex h-10 w-10 items-center justify-center rounded-full border border-surface-line bg-white font-display text-sm font-bold text-ink-soft transition group-hover:border-brand-300">
+                  <span class="demo-num-text">3</span>
+                  <svg class="demo-num-check h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                </span>
+                <span class="demo-label sr-only text-sm font-semibold text-ink-soft sm:not-sr-only">Revisión</span>
+              </button>
+              <button type="button" role="tab" id="demo-tab-3" aria-controls="demo-panel-3" aria-selected="false" tabindex="-1" class="demo-tab group flex flex-col items-center gap-2 rounded-ctl px-1 py-1 text-center" data-demo-tab>
+                <span class="demo-num flex h-10 w-10 items-center justify-center rounded-full border border-surface-line bg-white font-display text-sm font-bold text-ink-soft transition group-hover:border-brand-300">
+                  <span class="demo-num-text">4</span>
+                  <svg class="demo-num-check h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                </span>
+                <span class="demo-label sr-only text-sm font-semibold text-ink-soft sm:not-sr-only">Script Playwright</span>
+              </button>
+              <button type="button" role="tab" id="demo-tab-4" aria-controls="demo-panel-4" aria-selected="false" tabindex="-1" class="demo-tab group flex flex-col items-center gap-2 rounded-ctl px-1 py-1 text-center" data-demo-tab>
+                <span class="demo-num flex h-10 w-10 items-center justify-center rounded-full border border-surface-line bg-white font-display text-sm font-bold text-ink-soft transition group-hover:border-brand-300">
+                  <span class="demo-num-text">5</span>
+                  <svg class="demo-num-check h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                </span>
+                <span class="demo-label sr-only text-sm font-semibold text-ink-soft sm:not-sr-only">Resultados</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Controles: paso actual + pausa/reproducir -->
+          <div class="mt-6 flex items-center justify-between gap-4">
+            <p class="text-sm text-ink-soft"><span id="demo-counter" class="font-semibold text-ink">Paso 1 de 5</span> · <span id="demo-caption">Carga la historia en lenguaje natural.</span></p>
+            <button id="demo-toggle" type="button" class="inline-flex h-10 shrink-0 items-center gap-2 rounded-ctl bg-white px-3 text-sm font-semibold text-ink shadow-card ring-1 ring-inset ring-surface-line transition hover:ring-brand-300" aria-label="Pausar la demo">
+              <svg data-icon="pause" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 5.5v13M15 5.5v13"/></svg>
+              <svg data-icon="play" class="hidden h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>
+              <span data-label aria-hidden="true">Pausar</span>
+            </button>
+          </div>
+
+          <!-- Ventana de la app -->
+          <div id="demo-stage" class="window relative mt-4">
+            <div class="window-bar">
+              <span class="flex gap-1.5" aria-hidden="true"><span class="window-dot"></span><span class="window-dot"></span><span class="window-dot"></span></span>
+              <span class="truncate text-xs font-medium text-ink-muted">Casewright · HU-7 · Transferencia entre cuentas propias</span>
+            </div>
+
+            <div class="flex">
+              <!-- Sidebar mínima -->
+              <div class="hidden w-48 shrink-0 border-r border-surface-line p-3 md:block" aria-hidden="true">
+                <div class="space-y-0.5">
+                  <span class="side-item" data-side="0"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3.5H7.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8z"/><path d="M14 3.5V8h4.5M9 12.5h6M9 16h4"/></svg>Historias</span>
+                  <span class="side-item" data-side="1"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6.5h10M10 12h10M10 17.5h10M3.5 6.5l1.5 1.5 2.5-3M3.5 12l1.5 1.5 2.5-3M3.5 17.5l1.5 1.5 2.5-3"/></svg>Casos</span>
+                  <span class="side-item" data-side="2"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3.5H7.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8z"/><path d="M14 3.5V8h4.5M10.5 12l-2 2 2 2M13.5 12l2 2-2 2"/></svg>Exportación</span>
+                  <span class="side-item" data-side="3"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M10 8.8v6.4l5.2-3.2z"/></svg>Ejecuciones</span>
+                </div>
+              </div>
+
+              <!-- Paneles -->
+              <div class="min-w-0 flex-1">
+
+                <!-- Paso 1: Historia de usuario -->
+                <div id="demo-panel-0" role="tabpanel" aria-labelledby="demo-tab-0" tabindex="0" class="h-[30rem] overflow-y-auto bg-surface-alt/50 p-4 sm:h-[32rem] sm:p-6" data-demo-panel>
+                  <h3 class="text-base font-bold sm:text-lg">Nueva historia de usuario</h3>
+                  <p class="mt-1 text-sm text-ink-soft">Escribe la historia y sus criterios de aceptación en lenguaje natural.</p>
+                  <div class="mt-5">
+                    <p class="mock-label">Título</p>
+                    <p class="mock-field">Transferencia entre cuentas propias</p>
+                  </div>
+                  <div class="mt-4">
+                    <p class="mock-label">Historia y criterios de aceptación</p>
+                    <p class="mock-field min-h-[8.5rem] leading-6"><span id="story-text">Como cliente del home banking, quiero transferir dinero entre mis cuentas propias para mover fondos sin ir a una sucursal. Criterios: el monto debe ser mayor a 0 y no superar el saldo disponible.</span><span id="story-caret" class="caret" aria-hidden="true"></span></p>
+                  </div>
+                  <div class="mt-5 flex flex-wrap items-center gap-3">
+                    <span id="story-btn" class="mock-btn mock-btn-primary px-3.5 py-2 text-sm">Generar casos con IA</span>
+                    <span id="story-status" class="demo-hidden inline-flex items-center gap-2 text-sm font-medium text-brand-800">
+                      <svg class="spin h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 1 1-8.5 8.5" /></svg>
+                      Generando propuesta…
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Paso 2: Casos generados (Gherkin) -->
+                <div id="demo-panel-1" role="tabpanel" aria-labelledby="demo-tab-1" tabindex="0" class="h-[30rem] overflow-y-auto bg-surface-alt/50 p-4 sm:h-[32rem] sm:p-6" data-demo-panel hidden>
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h3 class="text-base font-bold sm:text-lg">Casos propuestos por la IA</h3>
+                    <span id="cases-valid" class="demo-item badge badge-ok">
+                      <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                      3 casos válidos según el catálogo
+                    </span>
+                  </div>
+                  <pre class="code-light mt-3 rounded-ctl bg-white px-4 py-2 ring-1 ring-inset ring-surface-line" data-gherkin># language: es
+Característica: Transferencia entre cuentas propias</pre>
+
+                  <div class="mt-3 space-y-3">
+                    <article class="demo-item card overflow-hidden" data-case>
+                      <div class="flex flex-wrap items-center gap-2 border-b border-surface-line px-4 py-2">
+                        <span class="tag">Positivo</span>
+                        <span class="badge badge-warn ml-auto"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Pendiente de revisión</span>
+                      </div>
+                      <pre class="code-light px-4 py-3" data-gherkin>Escenario: Transferencia exitosa con saldo suficiente
+  Dado que tengo una cuenta con saldo de 10000
+  Cuando transfiero 2500 a mi otra cuenta
+  Entonces veo el mensaje "Transferencia realizada"
+  Y el saldo de origen es 7500</pre>
+                    </article>
+                    <article class="demo-item card overflow-hidden" data-case>
+                      <div class="flex flex-wrap items-center gap-2 border-b border-surface-line px-4 py-2">
+                        <span class="tag">Negativo</span>
+                        <span class="badge badge-warn ml-auto"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Pendiente de revisión</span>
+                      </div>
+                      <pre class="code-light px-4 py-3" data-gherkin>Escenario: Monto mayor al saldo disponible
+  Dado que tengo una cuenta con saldo de 1000
+  Cuando intento transferir 1500
+  Entonces veo el error "Saldo insuficiente"</pre>
+                    </article>
+                    <article class="demo-item card overflow-hidden" data-case>
+                      <div class="flex flex-wrap items-center gap-2 border-b border-surface-line px-4 py-2">
+                        <span class="tag">Valor límite</span>
+                        <span class="badge badge-warn ml-auto"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Pendiente de revisión</span>
+                      </div>
+                      <pre class="code-light px-4 py-3" data-gherkin>Escenario: Monto igual a cero
+  Dado que tengo una cuenta con saldo de 1000
+  Cuando intento transferir 0
+  Entonces veo el error "El monto debe ser mayor a 0"</pre>
+                    </article>
+                  </div>
+                </div>
+
+                <!-- Paso 3: Revisión humana -->
+                <div id="demo-panel-2" role="tabpanel" aria-labelledby="demo-tab-2" tabindex="0" class="h-[30rem] overflow-y-auto bg-surface-alt/50 p-4 sm:h-[32rem] sm:p-6" data-demo-panel hidden>
+                  <h3 class="text-base font-bold sm:text-lg">Revisión de casos</h3>
+                  <p class="mt-1 text-sm text-ink-soft">Tú decides: editar, aprobar o descartar. Solo lo aprobado se exporta.</p>
+                  <ul class="mt-4 space-y-3">
+                    <li class="card p-3 sm:p-4" data-review>
+                      <div class="flex flex-wrap items-center gap-2">
+                        <p class="min-w-0 flex-1 text-sm font-semibold text-ink"><span class="font-mono text-brand-700">CP-21</span> Transferencia exitosa con saldo suficiente</p>
+                        <span data-badge></span>
+                      </div>
+                      <div class="mt-3 flex flex-wrap items-center gap-2">
+                        <span class="tag">Positivo</span>
+                        <span class="ml-auto flex gap-2" data-actions>
+                          <span class="mock-btn">Editar</span>
+                          <span class="mock-btn">Descartar</span>
+                          <span class="mock-btn mock-btn-primary" data-approve>Aprobar</span>
+                        </span>
+                      </div>
+                    </li>
+                    <li class="card p-3 sm:p-4" data-review>
+                      <div class="flex flex-wrap items-center gap-2">
+                        <p class="min-w-0 flex-1 text-sm font-semibold text-ink"><span class="font-mono text-brand-700">CP-22</span> Monto mayor al saldo disponible</p>
+                        <span data-badge></span>
+                      </div>
+                      <div class="mt-3 flex flex-wrap items-center gap-2">
+                        <span class="tag">Negativo</span>
+                        <span class="ml-auto flex gap-2" data-actions>
+                          <span class="mock-btn">Editar</span>
+                          <span class="mock-btn">Descartar</span>
+                          <span class="mock-btn mock-btn-primary" data-approve>Aprobar</span>
+                        </span>
+                      </div>
+                    </li>
+                    <li class="card p-3 sm:p-4" data-review>
+                      <div class="flex flex-wrap items-center gap-2">
+                        <p class="min-w-0 flex-1 text-sm font-semibold text-ink"><span class="font-mono text-brand-700">CP-23</span> Monto igual a cero</p>
+                        <span id="review-edited" class="demo-hidden badge badge-neutral">
+                          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z"/></svg>Editado
+                        </span>
+                        <span data-badge></span>
+                      </div>
+                      <!-- Editor del caso -->
+                      <div id="review-editor" class="demo-hidden mt-3 rounded-ctl border-2 border-brand-600 bg-white">
+                        <pre class="code-light px-3 py-2"><span data-gherkin>Escenario: Monto igual a cero
+  Dado que tengo una cuenta con saldo de 1000
+  Cuando intento transferir 0
+  Entonces veo el error "El monto debe ser mayor a 0"</span>
+  <span id="review-newline"></span><span id="review-caret" class="caret" aria-hidden="true"></span></pre>
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-t border-surface-line px-3 py-2">
+                          <span id="review-check" class="demo-hidden inline-flex items-center gap-1.5 text-xs font-semibold text-ok-700">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                            Revalidado: todos los pasos existen en el catálogo
+                          </span>
+                          <span id="review-save" class="mock-btn mock-btn-primary ml-auto">Guardar</span>
+                        </div>
+                      </div>
+                      <div class="mt-3 flex flex-wrap items-center gap-2">
+                        <span class="tag">Valor límite</span>
+                        <span class="ml-auto flex gap-2" data-actions>
+                          <span class="mock-btn" id="review-edit">Editar</span>
+                          <span class="mock-btn">Descartar</span>
+                          <span class="mock-btn mock-btn-primary" data-approve>Aprobar</span>
+                        </span>
+                      </div>
+                    </li>
+                  </ul>
+                  <p id="review-done" class="demo-item mt-4 flex items-center gap-2 rounded-ctl bg-brand-50 px-3 py-2.5 text-sm font-semibold text-brand-800 ring-1 ring-inset ring-brand-100">
+                    <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9.5" cy="8" r="3.5"/><path d="M3.5 19.5c.8-3.2 3.2-5 6-5s5.2 1.8 6 5M15.5 11l2 2 3.5-4"/></svg>
+                    3 casos aprobados por una persona, listos para exportar.
+                  </p>
+                </div>
+
+                <!-- Paso 4: Script de Playwright -->
+                <div id="demo-panel-3" role="tabpanel" aria-labelledby="demo-tab-3" tabindex="0" class="flex h-[30rem] flex-col bg-brand-950 sm:h-[32rem]" data-demo-panel hidden>
+                  <div class="flex flex-wrap items-center gap-2 border-b border-white/10 px-4 py-2.5">
+                    <span class="rounded-md bg-white/10 px-2 py-1 font-mono text-xs font-medium text-white">HU-7.spec.ts</span>
+                    <span id="script-done" class="demo-item ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-brand-200">
+                      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                      Generado desde plantillas, sin código del modelo
+                    </span>
+                  </div>
+                  <pre id="script-scroll" class="min-h-0 flex-1 overflow-auto px-4 py-4 font-mono text-[12px] leading-6 text-white sm:text-[12.5px]"><code id="script-code"></code><span id="script-caret" class="caret caret-light" aria-hidden="true"></span></pre>
+                </div>
+
+                <!-- Paso 5: Resultados -->
+                <div id="demo-panel-4" role="tabpanel" aria-labelledby="demo-tab-4" tabindex="0" class="h-[30rem] overflow-y-auto bg-surface-alt/50 p-4 sm:h-[32rem] sm:p-6" data-demo-panel hidden>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="text-base font-bold sm:text-lg">Ejecución #8 · HU-7</h3>
+                    <span id="run-status" class="ml-auto"></span>
+                  </div>
+                  <p class="mt-1 text-sm text-ink-soft">Chromium · 3 casos aprobados</p>
+                  <ul class="mt-4 space-y-2">
+                    <li class="card px-3 py-3 sm:px-4" data-result data-ok="true" data-dur="2,4 s">
+                      <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                        <p class="min-w-0 flex-1 basis-full text-sm font-semibold text-ink sm:basis-auto"><span class="font-mono text-brand-700">CP-21</span> Transferencia exitosa con saldo suficiente</p>
+                        <span class="font-mono text-xs text-ink-muted" data-time>—</span>
+                        <span data-state></span>
+                      </div>
+                    </li>
+                    <li class="card px-3 py-3 sm:px-4" data-result data-ok="true" data-dur="1,9 s">
+                      <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                        <p class="min-w-0 flex-1 basis-full text-sm font-semibold text-ink sm:basis-auto"><span class="font-mono text-brand-700">CP-22</span> Monto mayor al saldo disponible</p>
+                        <span class="font-mono text-xs text-ink-muted" data-time>—</span>
+                        <span data-state></span>
+                      </div>
+                    </li>
+                    <li class="card px-3 py-3 sm:px-4" data-result data-ok="false" data-dur="5,6 s">
+                      <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                        <p class="min-w-0 flex-1 basis-full text-sm font-semibold text-ink sm:basis-auto"><span class="font-mono text-brand-700">CP-23</span> Monto igual a cero</p>
+                        <span class="font-mono text-xs text-ink-muted" data-time>—</span>
+                        <span data-state></span>
+                      </div>
+                      <div id="run-error" class="demo-hidden mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
+                        <pre class="overflow-x-auto whitespace-pre-wrap break-words rounded-ctl bg-fail-50 px-3 py-2 font-mono text-[11.5px] leading-5 text-fail-700 ring-1 ring-inset ring-fail-200">Paso: Entonces veo el error "El monto debe ser mayor a 0"
+Error: expect(locator).toBeVisible() failed
+Locator: getByText('El monto debe ser mayor a 0')
+Timeout: 5000ms</pre>
+                        <!-- Evidencia: miniatura de la captura del fallo -->
+                        <div class="flex items-center gap-3 sm:flex-col sm:items-stretch">
+                          <div class="w-28 shrink-0 overflow-hidden rounded-lg border border-surface-line bg-white" aria-hidden="true">
+                            <div class="flex gap-0.5 border-b border-surface-line bg-surface-alt px-1.5 py-1"><span class="h-1 w-1 rounded-full bg-[#D0D5DD]"></span><span class="h-1 w-1 rounded-full bg-[#D0D5DD]"></span><span class="h-1 w-1 rounded-full bg-[#D0D5DD]"></span></div>
+                            <div class="space-y-1 p-1.5">
+                              <div class="h-1.5 w-12 rounded bg-surface-line"></div>
+                              <div class="h-3 rounded border border-surface-line px-1 text-[6px] leading-3 text-ink">0</div>
+                              <div class="text-[6px] font-semibold leading-3 text-fail-700">Ingresa un monto válido</div>
+                              <div class="h-2.5 w-10 rounded bg-brand-700"></div>
+                            </div>
+                          </div>
+                          <span class="mock-btn"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M20.5 16l-5-5-8 8"/></svg>Evidencia</span>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                  <div id="run-summary" class="demo-item mt-4 flex flex-wrap items-center gap-2 text-sm">
+                    <span class="badge badge-ok"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>2 aprobados</span>
+                    <span class="badge badge-fail"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>1 fallido</span>
+                    <span class="text-ink-soft">El fallo muestra el mensaje real de la app: el texto esperado no coincide.</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Cursor simulado (decorativo) -->
+            <div id="demo-cursor" class="demo-cursor opacity-0" aria-hidden="true">
+              <svg width="22" height="24" viewBox="0 0 22 24"><path d="M3 2l15 9.5-6.6 1.4L15.6 21l-3.2 1.5-4.2-8.2L3 18.6z" fill="#0B1220" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         5.5 PARA CADA EQUIPO
+         ============================================================ -->
+    <section id="equipos" class="section border-y border-surface-line bg-surface-alt" aria-labelledby="equipos-titulo">
+      <div class="container-page">
+        <div class="reveal max-w-2xl">
+          <p class="text-sm font-semibold uppercase tracking-wider text-brand-700">Para equipos</p>
+          <h2 id="equipos-titulo" class="h2 mt-3">Más cobertura para quien prueba, más control para quien responde por la calidad</h2>
+        </div>
+
+        <div class="mt-12 grid gap-6 lg:grid-cols-2">
+          <article class="reveal card p-6 sm:p-8">
+            <span class="icon-box"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 8L4.5 12l4 4M15.5 8l4 4-4 4M13.5 5.5l-3 13"/></svg></span>
+            <h3 class="mt-5 text-xl font-bold">Para QA y desarrollo</h3>
+            <p class="mt-2 leading-relaxed">Arranca de un borrador completo y dedica tu tiempo a revisar, no a tipear.</p>
+            <ul class="mt-6 space-y-4">
+              <li class="flex gap-3"><svg class="mt-0.5 h-5 w-5 shrink-0 text-brand-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span><strong class="font-semibold text-ink">Casos positivos, negativos y de valores límite</strong> desde el primer borrador, cada uno etiquetado por tipo.</span></li>
+              <li class="flex gap-3"><svg class="mt-0.5 h-5 w-5 shrink-0 text-brand-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span><strong class="font-semibold text-ink">Del Gherkin al script de Playwright</strong> sin empezar de cero: el <code class="font-mono text-[0.9em] text-brand-800">.spec.ts</code> se genera a partir de los casos aprobados.</span></li>
+              <li class="flex gap-3"><svg class="mt-0.5 h-5 w-5 shrink-0 text-brand-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span><strong class="font-semibold text-ink">Casos editables antes de usarlos.</strong> Cada edición se vuelve a validar.</span></li>
+              <li class="flex gap-3"><svg class="mt-0.5 h-5 w-5 shrink-0 text-brand-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span><strong class="font-semibold text-ink">Gherkin en español,</strong> legible para todo el equipo, técnico o no.</span></li>
+            </ul>
+          </article>
+
+          <article class="reveal card p-6 sm:p-8">
+            <span class="icon-box"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l7 2.8v5.2c0 4.3-2.9 7.6-7 9-4.1-1.4-7-4.7-7-9V6.3z"/><path d="M9 12l2 2 4-4"/></svg></span>
+            <h3 class="mt-5 text-xl font-bold">Para líderes de QA y tecnología</h3>
+            <p class="mt-2 leading-relaxed">Cada prueba tiene origen, responsable de su aprobación y evidencia.</p>
+            <ul class="mt-6 space-y-4">
+              <li class="flex gap-3"><svg class="mt-0.5 h-5 w-5 shrink-0 text-brand-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span><strong class="font-semibold text-ink">Trazabilidad completa:</strong> historia → caso → script → resultado.</span></li>
+              <li class="flex gap-3"><svg class="mt-0.5 h-5 w-5 shrink-0 text-brand-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span><strong class="font-semibold text-ink">Ninguna prueba se ejecuta sin aprobación humana.</strong></span></li>
+              <li class="flex gap-3"><svg class="mt-0.5 h-5 w-5 shrink-0 text-brand-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span><strong class="font-semibold text-ink">Evidencias e historial de cada ejecución:</strong> duración, mensaje de error y captura de los fallos.</span></li>
+              <li class="flex gap-3"><svg class="mt-0.5 h-5 w-5 shrink-0 text-brand-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span><strong class="font-semibold text-ink">Pensado para entornos regulados</strong> como el bancario, donde la cobertura y la trazabilidad son críticas.</span></li>
+            </ul>
+            <!-- Cadena de trazabilidad -->
+            <div class="mt-7 rounded-ctl bg-surface-alt p-4 ring-1 ring-inset ring-surface-line">
+              <p class="text-xs font-semibold uppercase tracking-wider text-ink-muted">Trazabilidad de una prueba</p>
+              <ol class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-2 font-mono text-xs font-semibold">
+                <li class="rounded-md bg-white px-2 py-1 text-brand-800 ring-1 ring-inset ring-surface-line">HU-7</li>
+                <li aria-hidden="true" class="text-ink-muted">→</li>
+                <li class="rounded-md bg-white px-2 py-1 text-brand-800 ring-1 ring-inset ring-surface-line">CP-21</li>
+                <li aria-hidden="true" class="text-ink-muted">→</li>
+                <li class="rounded-md bg-white px-2 py-1 text-brand-800 ring-1 ring-inset ring-surface-line">HU-7.spec.ts</li>
+                <li aria-hidden="true" class="text-ink-muted">→</li>
+                <li class="inline-flex items-center gap-1 rounded-md bg-ok-50 px-2 py-1 text-ok-700 ring-1 ring-inset ring-ok-200">
+                  <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Ejecución #8: aprobado
+                </li>
+              </ol>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         5.6 FUNCIONALIDADES
+         ============================================================ -->
+    <section id="funcionalidades" class="section" aria-labelledby="func-titulo">
+      <div class="container-page">
+        <div class="reveal max-w-2xl">
+          <p class="text-sm font-semibold uppercase tracking-wider text-brand-700">Funcionalidades</p>
+          <h2 id="func-titulo" class="h2 mt-3">Todo el ciclo de la prueba en un solo lugar</h2>
+          <p class="lead">Desde la historia de usuario hasta el reporte de la ejecución, sin saltar entre herramientas.</p>
+        </div>
+        <ul class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <li class="reveal card card-hover p-6">
+            <span class="icon-box"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3.5H7.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8z"/><path d="M14 3.5V8h4.5M9 12.5h6M9 16h4"/></svg></span>
+            <h3 class="mt-5 text-lg font-bold">Historias de usuario</h3>
+            <p class="mt-2 leading-relaxed">Alta, edición y listado de historias, con el historial de casos y ejecuciones de cada una.</p>
+          </li>
+          <li class="reveal card card-hover p-6">
+            <span class="icon-box"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6.5h10M10 12h10M10 17.5h10M3.5 6.5l1.5 1.5 2.5-3M3.5 12l1.5 1.5 2.5-3M3.5 17.5l1.5 1.5 2.5-3"/></svg></span>
+            <h3 class="mt-5 text-lg font-bold">Casos en Gherkin con IA</h3>
+            <p class="mt-2 leading-relaxed">Salida estructurada y validada: esquema, sintaxis Gherkin y pasos del catálogo.</p>
+          </li>
+          <li class="reveal card card-hover p-6">
+            <span class="icon-box"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9.5" cy="8" r="3.5"/><path d="M3.5 19.5c.8-3.2 3.2-5 6-5s5.2 1.8 6 5M15.5 11l2 2 3.5-4"/></svg></span>
+            <h3 class="mt-5 text-lg font-bold">Flujo de revisión</h3>
+            <p class="mt-2 leading-relaxed">Edita, aprueba o descarta cada caso. Solo lo aprobado avanza.</p>
+          </li>
+          <li class="reveal card card-hover p-6">
+            <span class="icon-box"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3.5H7.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8z"/><path d="M14 3.5V8h4.5M10.5 12l-2 2 2 2M13.5 12l2 2-2 2"/></svg></span>
+            <h3 class="mt-5 text-lg font-bold">Exportación a Playwright</h3>
+            <p class="mt-2 leading-relaxed">Un archivo <code class="font-mono text-[0.9em] text-brand-800">.spec.ts</code> en TypeScript, generado desde plantillas.</p>
+          </li>
+          <li class="reveal card card-hover p-6">
+            <span class="icon-box"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M10 8.8v6.4l5.2-3.2z"/></svg></span>
+            <h3 class="mt-5 text-lg font-bold">Ejecución con evidencias</h3>
+            <p class="mt-2 leading-relaxed">Resultado por caso, duración, mensaje de error y captura de cada fallo.</p>
+          </li>
+          <li class="reveal card card-hover p-6">
+            <span class="icon-box"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16M7 16.5V11M12 16.5V6.5M17 16.5v-4"/></svg></span>
+            <h3 class="mt-5 text-lg font-bold">Panel e historial</h3>
+            <p class="mt-2 leading-relaxed">Casos por estado, última ejecución de cada historia e historial de generaciones.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         5.7 IA QUE ASISTE, NO REEMPLAZA
+         ============================================================ -->
+    <section class="section relative overflow-hidden bg-brand-950 text-brand-100" aria-labelledby="ia-titulo">
+      <svg class="pointer-events-none absolute inset-0 h-full w-full text-white/[0.04]" aria-hidden="true">
+        <defs><pattern id="grid-dark" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="currentColor" stroke-width="1"/></pattern></defs>
+        <rect width="100%" height="100%" fill="url(#grid-dark)"/>
+      </svg>
+      <div class="container-page relative">
+        <div class="reveal mx-auto max-w-3xl text-center">
+          <p class="text-sm font-semibold uppercase tracking-wider text-brand-300">Nuestra postura</p>
+          <h2 id="ia-titulo" class="h2 mt-3 !text-white">IA que asiste, no reemplaza</h2>
+          <p class="lead text-brand-100">Un modelo de lenguaje no es determinista y puede equivocarse. Casewright lo asume: por eso cada propuesta pasa dos controles antes de ejecutarse, y el último siempre es de una persona.</p>
+        </div>
+
+        <ol class="mt-14 grid gap-5 md:grid-cols-3">
+          <li class="reveal relative rounded-card border border-white/10 bg-white/[0.04] p-6">
+            <div class="flex items-center gap-3">
+              <span class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-800 font-display text-sm font-bold text-white ring-1 ring-brand-600">1</span>
+              <h3 class="text-lg font-bold !text-white">El modelo propone</h3>
+            </div>
+            <p class="mt-4 leading-relaxed text-brand-100">Sugiere casos en Gherkin usando solo los pasos del catálogo definido para la aplicación que se prueba.</p>
+          </li>
+          <li class="reveal relative rounded-card border border-white/10 bg-white/[0.04] p-6">
+            <div class="flex items-center gap-3">
+              <span class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-800 font-display text-sm font-bold text-white ring-1 ring-brand-600">2</span>
+              <h3 class="text-lg font-bold !text-white">El sistema valida</h3>
+            </div>
+            <p class="mt-4 leading-relaxed text-brand-100">Revisa la estructura, la sintaxis Gherkin y que cada paso exista en el catálogo. Lo que no cumple queda marcado con su error y no se puede aprobar.</p>
+          </li>
+          <li class="reveal relative rounded-card border border-brand-400/40 bg-brand-800/40 p-6">
+            <div class="flex items-center gap-3">
+              <span class="flex h-9 w-9 items-center justify-center rounded-full bg-white font-display text-sm font-bold text-brand-900">3</span>
+              <h3 class="text-lg font-bold !text-white">Una persona aprueba</h3>
+            </div>
+            <p class="mt-4 leading-relaxed text-brand-100">Tu equipo edita, aprueba o descarta. Solo lo aprobado se exporta y se ejecuta.</p>
+          </li>
+        </ol>
+
+        <p class="reveal mx-auto mt-10 max-w-3xl text-center text-brand-100">
+          <strong class="font-semibold text-white">El modelo nunca escribe código.</strong> Los scripts de Playwright salen de plantillas y los datos de cada paso se insertan como texto literal.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         5.8 PREGUNTAS FRECUENTES
+         ============================================================ -->
+    <section id="preguntas" class="section" aria-labelledby="faq-titulo">
+      <div class="container-page grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16">
+        <div class="reveal min-w-0">
+          <p class="text-sm font-semibold uppercase tracking-wider text-brand-700">Preguntas</p>
+          <h2 id="faq-titulo" class="h2 mt-3">Respuestas claras antes de empezar</h2>
+          <p class="lead">Lo que más nos preguntan los equipos de QA sobre el uso de IA en sus pruebas.</p>
+        </div>
+        <div class="reveal divide-y divide-surface-line rounded-card border border-surface-line bg-white shadow-card">
+          <details class="group" name="faq">
+            <summary class="flex cursor-pointer items-center justify-between gap-4 rounded-card px-5 py-5 font-display text-base font-bold text-ink transition hover:text-brand-800 sm:px-6 sm:text-lg">
+              ¿Casewright reemplaza al equipo de QA?
+              <svg class="faq-chevron h-5 w-5 shrink-0 text-ink-muted transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </summary>
+            <p class="px-5 pb-5 leading-relaxed sm:px-6">No. La IA propone un primer borrador de casos; tu equipo los revisa, los edita y decide cuáles se aprueban. Nada se ejecuta sin esa aprobación.</p>
+          </details>
+          <details class="group" name="faq">
+            <summary class="flex cursor-pointer items-center justify-between gap-4 rounded-card px-5 py-5 font-display text-base font-bold text-ink transition hover:text-brand-800 sm:px-6 sm:text-lg">
+              ¿Qué formato tienen los casos de prueba?
+              <svg class="faq-chevron h-5 w-5 shrink-0 text-ink-muted transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </summary>
+            <p class="px-5 pb-5 leading-relaxed sm:px-6">Gherkin en español (Dado, Cuando, Entonces). Es legible para perfiles técnicos y no técnicos, y cada caso se etiqueta como positivo, negativo o de valor límite.</p>
+          </details>
+          <details class="group" name="faq">
+            <summary class="flex cursor-pointer items-center justify-between gap-4 rounded-card px-5 py-5 font-display text-base font-bold text-ink transition hover:text-brand-800 sm:px-6 sm:text-lg">
+              ¿Con qué herramienta se automatizan las pruebas?
+              <svg class="faq-chevron h-5 w-5 shrink-0 text-ink-muted transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </summary>
+            <p class="px-5 pb-5 leading-relaxed sm:px-6">Con Playwright y TypeScript. Casewright genera el archivo <code class="font-mono text-[0.9em] text-brand-800">.spec.ts</code> a partir de los casos aprobados, lo ejecuta y registra el resultado de cada caso.</p>
+          </details>
+          <details class="group" name="faq">
+            <summary class="flex cursor-pointer items-center justify-between gap-4 rounded-card px-5 py-5 font-display text-base font-bold text-ink transition hover:text-brand-800 sm:px-6 sm:text-lg">
+              ¿Qué pasa si la IA se equivoca?
+              <svg class="faq-chevron h-5 w-5 shrink-0 text-ink-muted transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </summary>
+            <p class="px-5 pb-5 leading-relaxed sm:px-6">Cada propuesta se valida: estructura, sintaxis Gherkin y que cada paso exista en el catálogo. Los casos con errores quedan marcados y no se pueden aprobar hasta corregirlos. Además, nada se ejecuta sin la aprobación de una persona.</p>
+          </details>
+          <details class="group" name="faq">
+            <summary class="flex cursor-pointer items-center justify-between gap-4 rounded-card px-5 py-5 font-display text-base font-bold text-ink transition hover:text-brand-800 sm:px-6 sm:text-lg">
+              ¿Qué datos se envían al modelo de IA?
+              <svg class="faq-chevron h-5 w-5 shrink-0 text-ink-muted transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </summary>
+            <p class="px-5 pb-5 leading-relaxed sm:px-6">La historia de usuario y el catálogo de pasos se envían al proveedor del modelo para generar la propuesta. Por eso recomendamos no cargar datos reales ni confidenciales: usa historias redactadas para prueba y datos de ejemplo.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         5.9 CTA FINAL CON FORMULARIO
+         ============================================================ -->
+    <section id="acceso" class="section border-t border-surface-line bg-surface-alt" aria-labelledby="acceso-titulo">
+      <div class="container-page grid items-start gap-12 lg:grid-cols-2 lg:gap-16">
+        <div class="reveal lg:sticky lg:top-28">
+          <p class="text-sm font-semibold uppercase tracking-wider text-brand-700">Acceso anticipado</p>
+          <h2 id="acceso-titulo" class="h2 mt-3">Construye tus próximos casos de prueba con Casewright</h2>
+          <p class="lead">Solicita acceso y prueba el flujo completo: de la historia de usuario a los resultados, con tu equipo siempre al mando.</p>
+          <ul class="mt-8 space-y-3">
+            <li class="flex items-center gap-3"><svg class="h-5 w-5 shrink-0 text-brand-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Casos Gherkin propuestos con IA y validados</li>
+            <li class="flex items-center gap-3"><svg class="h-5 w-5 shrink-0 text-brand-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Revisión humana antes de cada ejecución</li>
+            <li class="flex items-center gap-3"><svg class="h-5 w-5 shrink-0 text-brand-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Pruebas de Playwright con resultados y evidencias</li>
+          </ul>
+        </div>
+
+        <div class="reveal card p-6 sm:p-8">
+          <form id="form-acceso" novalidate>
+            <h3 class="text-xl font-bold">Solicitar acceso anticipado</h3>
+            <p class="mt-1 text-sm text-ink-soft">Los campos marcados con <span aria-hidden="true">*</span><span class="sr-only">asterisco</span> son obligatorios.</p>
+
+            <div class="mt-6 space-y-5">
+              <div>
+                <label for="f-nombre" class="field-label">Nombre <span aria-hidden="true" class="text-brand-700">*</span></label>
+                <input id="f-nombre" name="nombre" type="text" autocomplete="name" required aria-required="true" aria-describedby="f-nombre-error" class="field-input" placeholder="Tu nombre y apellido">
+                <p id="f-nombre-error" class="field-error" hidden></p>
+              </div>
+              <div>
+                <label for="f-email" class="field-label">Email de trabajo <span aria-hidden="true" class="text-brand-700">*</span></label>
+                <input id="f-email" name="email" type="email" autocomplete="email" inputmode="email" required aria-required="true" aria-describedby="f-email-error" class="field-input" placeholder="nombre@empresa.com">
+                <p id="f-email-error" class="field-error" hidden></p>
+              </div>
+              <div>
+                <label for="f-empresa" class="field-label">Empresa <span class="font-normal text-ink-muted">(opcional)</span></label>
+                <input id="f-empresa" name="empresa" type="text" autocomplete="organization" class="field-input" placeholder="Nombre de tu empresa">
+              </div>
+              <div>
+                <label for="f-rol" class="field-label">Rol <span aria-hidden="true" class="text-brand-700">*</span></label>
+                <select id="f-rol" name="rol" required aria-required="true" aria-describedby="f-rol-error" class="field-input">
+                  <option value="">Selecciona tu rol</option>
+                  <option value="qa">QA</option>
+                  <option value="desarrollo">Desarrollo</option>
+                  <option value="lider">Líder de QA / Tecnología</option>
+                  <option value="otro">Otro</option>
+                </select>
+                <p id="f-rol-error" class="field-error" hidden></p>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-7 w-full">Solicitar acceso</button>
+            <p class="mt-3 text-center text-xs text-ink-muted">Solo usaremos estos datos para contactarte sobre el acceso.</p>
+          </form>
+
+          <!-- Mensaje de éxito (reemplaza al formulario) -->
+          <div id="form-exito" class="py-8 text-center" tabindex="-1" hidden>
+            <span class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-ok-50 text-ok-700 ring-1 ring-inset ring-ok-200">
+              <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            </span>
+            <h3 class="mt-5 text-2xl font-bold">¡Gracias! Te contactaremos pronto.</h3>
+            <p class="mt-2">Recibimos tu solicitud de acceso anticipado a Casewright.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================================================
+       5.10 FOOTER
+       ============================================================ -->
+  <footer class="border-t border-surface-line bg-white">
+    <div class="container-page flex flex-col gap-8 py-12 md:flex-row md:items-center md:justify-between">
+      <div>
+        <a href="#inicio" class="inline-flex items-center gap-2.5 rounded-lg" aria-label="Casewright, volver al inicio">
+          <svg class="h-7 w-7" viewBox="0 0 32 32" aria-hidden="true">
+            <path d="M8 1h15l8 8v15a7 7 0 0 1-7 7H8a7 7 0 0 1-7-7V8a7 7 0 0 1 7-7z" fill="#1F37B5"/>
+            <path d="M23 1v8h8z" fill="#93B0FB"/>
+            <path d="M8.5 16.5l5 5L23 12" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="square"/>
+          </svg>
+          <span class="font-display text-lg font-bold tracking-tight text-ink">Case<span class="text-brand-700">wright</span></span>
+        </a>
+        <p class="mt-3 max-w-sm text-sm">Casos de prueba construidos con precisión. La IA propone, tu equipo decide.</p>
+      </div>
+      <nav aria-label="Pie de página">
+        <ul class="flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium">
+          <li><a href="#como-funciona" class="rounded text-ink-soft transition hover:text-brand-800">Cómo funciona</a></li>
+          <li><a href="#equipos" class="rounded text-ink-soft transition hover:text-brand-800">Para equipos</a></li>
+          <li><a href="#funcionalidades" class="rounded text-ink-soft transition hover:text-brand-800">Funcionalidades</a></li>
+          <li><a href="#preguntas" class="rounded text-ink-soft transition hover:text-brand-800">Preguntas</a></li>
+          <li><a href="#acceso" class="rounded text-ink-soft transition hover:text-brand-800">Solicitar acceso</a></li>
+        </ul>
+      </nav>
+    </div>
+    <div class="border-t border-surface-line">
+      <p class="container-page py-6 text-sm text-ink-muted">© 2026 Casewright</p>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       JAVASCRIPT
+       ============================================================ -->
+  <script>
+  (function () {
+    'use strict';
+
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ---------- Utilidades ---------- */
+    function escapeHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function $(sel, root) { return (root || document).querySelector(sel); }
+    function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+
+    /* ---------- Resaltado de sintaxis ---------- */
+    // Gherkin: palabras clave, textos entre comillas, números y comentarios.
+    function highlightGherkin(text) {
+      return text.split('\n').map(function (line) {
+        if (/^\s*#/.test(line)) return '<span class="gk-com">' + escapeHtml(line) + '</span>';
+        var m = line.match(/^(\s*)(Característica:|Escenario:|Dado|Cuando|Entonces|Y)(?=\s|$)(.*)$/);
+        if (!m) return escapeHtml(line);
+        var rest = escapeHtml(m[3])
+          .replace(/"([^"]*)"/g, '<span class="gk-str">"$1"</span>')
+          .replace(/(^|\s)(\d+)(?=\s|$)/g, '$1<span class="gk-num">$2</span>');
+        return m[1] + '<span class="gk-kw">' + m[2] + '</span>' + rest;
+      }).join('\n');
+    }
+
+    // TypeScript: tokeniza una vez para poder "tipear" el código conservando los colores.
+    function tokenizeTs(code) {
+      var re = /(\/\/[^\n]*)|('(?:[^'\\\n]|\\.)*')|\b(import|from|async|await|const)\b|\b(test|expect|page)\b|([A-Za-z_]\w*)(?=\()/g;
+      var tokens = [], last = 0, m;
+      while ((m = re.exec(code))) {
+        if (m.index > last) tokens.push([null, code.slice(last, m.index)]);
+        var cls = m[1] ? 'ts-com' : m[2] ? 'ts-str' : m[3] ? 'ts-kw' : m[4] ? 'ts-obj' : 'ts-fn';
+        tokens.push([cls, m[0]]);
+        last = re.lastIndex;
+      }
+      if (last < code.length) tokens.push([null, code.slice(last)]);
+      return tokens;
+    }
+    function renderTokens(tokens, count) {
+      var out = '', left = count;
+      for (var i = 0; i < tokens.length && left > 0; i++) {
+        var t = tokens[i], piece = t[1].slice(0, left);
+        left -= piece.length;
+        out += t[0] ? '<span class="' + t[0] + '">' + escapeHtml(piece) + '</span>' : escapeHtml(piece);
+      }
+      return out;
+    }
+
+    function initHighlight() {
+      $$('[data-gherkin]').forEach(function (el) { el.innerHTML = highlightGherkin(el.textContent); });
+    }
+
+    /* ---------- Navbar: borde sutil al hacer scroll ---------- */
+    function initNavbar() {
+      var header = $('.site-header');
+      function update() { header.classList.toggle('is-scrolled', window.scrollY > 8); }
+      update();
+      window.addEventListener('scroll', update, { passive: true });
+    }
+
+    /* ---------- Menú mobile ---------- */
+    function initMobileMenu() {
+      var btn = $('#menu-toggle'), menu = $('#menu-mobile');
+      function setOpen(open) {
+        btn.setAttribute('aria-expanded', String(open));
+        btn.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+        menu.classList.toggle('hidden', !open);
+        $('[data-icon="open"]', btn).classList.toggle('hidden', open);
+        $('[data-icon="close"]', btn).classList.toggle('hidden', !open);
+      }
+      btn.addEventListener('click', function () { setOpen(btn.getAttribute('aria-expanded') !== 'true'); });
+      $$('a', menu).forEach(function (a) { a.addEventListener('click', function () { setOpen(false); }); });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && btn.getAttribute('aria-expanded') === 'true') { setOpen(false); btn.focus(); }
+      });
+      window.matchMedia('(min-width: 1024px)').addEventListener('change', function (e) { if (e.matches) setOpen(false); });
+    }
+
+    /* ---------- Aparición de secciones al hacer scroll ---------- */
+    function initReveal() {
+      var items = $$('.reveal');
+      if (reduceMotion || !('IntersectionObserver' in window)) {
+        items.forEach(function (el) { el.classList.add('is-visible'); });
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) { entry.target.classList.add('is-visible'); io.unobserve(entry.target); }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+      items.forEach(function (el) { io.observe(el); });
+    }
+
+    /* ---------- Acordeón de preguntas: uno abierto a la vez ---------- */
+    // Se usa <details>/<summary> (accesible de forma nativa). Este script solo cierra
+    // el resto cuando el navegador no soporta el atributo "name" en <details>.
+    function initAccordion() {
+      var items = $$('#preguntas details');
+      items.forEach(function (d) {
+        d.addEventListener('toggle', function () {
+          if (d.open) items.forEach(function (o) { if (o !== d) o.open = false; });
+        });
+      });
+    }
+
+    /* ---------- Demo animada ---------- */
+    function initDemo() {
+      var STORY = 'Como cliente del home banking, quiero transferir dinero entre mis cuentas propias para mover fondos sin ir a una sucursal. Criterios: el monto debe ser mayor a 0 y no superar el saldo disponible.';
+      var NEW_LINE = 'Y el saldo de origen sigue siendo 1000';
+      var SCRIPT = [
+        '// Generado por Casewright para HU-7 a partir de los casos aprobados.',
+        "import { test, expect } from '@playwright/test';",
+        '',
+        "test.describe('[HU-7] Transferencia entre cuentas propias', () => {",
+        "  test('[CP-21] Transferencia exitosa con saldo suficiente', async ({ page }) => {",
+        "    await test.step('Dado que tengo una cuenta con saldo de 10000', async () => {",
+        "      await page.goto('/cuentas');",
+        "      await expect(page.getByTestId('saldo-origen')).toHaveText('$ 10.000');",
+        '    });',
+        "    await test.step('Cuando transfiero 2500 a mi otra cuenta', async () => {",
+        "      await page.getByRole('link', { name: 'Transferir' }).click();",
+        "      await page.getByLabel('Monto').fill('2500');",
+        "      await page.getByRole('button', { name: 'Confirmar' }).click();",
+        '    });',
+        "    await test.step('Entonces veo el mensaje \"Transferencia realizada\"', async () => {",
+        "      await expect(page.getByText('Transferencia realizada')).toBeVisible();",
+        '    });',
+        "    await test.step('Y el saldo de origen es 7500', async () => {",
+        "      await expect(page.getByTestId('saldo-origen')).toHaveText('$ 7.500');",
+        '    });',
+        '  });',
+        '',
+        '  // [CP-22] y [CP-23] siguen la misma estructura: un test.step por paso.',
+        '});'
+      ].join('\n');
+      var SCRIPT_TOKENS = tokenizeTs(SCRIPT);
+      var CAPTIONS = [
+        'Carga la historia en lenguaje natural.',
+        'La IA propone casos y el sistema los valida.',
+        'Una persona revisa, edita y aprueba.',
+        'Los casos aprobados se convierten en Playwright.',
+        'Se ejecutan y quedan resultados y evidencias.'
+      ];
+      var SIDEBAR = [0, 1, 1, 2, 3];
+
+      var root = $('#demo');
+      var tabs = $$('[data-demo-tab]', root);
+      var panels = $$('[data-demo-panel]', root);
+      var stage = $('#demo-stage');
+      var cursor = $('#demo-cursor');
+      var toggle = $('#demo-toggle');
+      var bar = $('#demo-bar');
+
+      var CANCEL = {};
+      var current = 0, runId = 0, playing = !reduceMotion, visible = false, looping = false;
+
+      /* Espera cancelable que se congela mientras la demo está pausada o fuera de pantalla */
+      function sleep(ms, id) {
+        return new Promise(function (resolve, reject) {
+          var remaining = ms, last = performance.now();
+          (function tick() {
+            if (id !== runId) return reject(CANCEL);
+            var now = performance.now();
+            if (playing && visible && !document.hidden) remaining -= now - last;
+            last = now;
+            if (remaining <= 0) resolve(); else setTimeout(tick, 16);
+          })();
+        });
+      }
+
+      /* Elementos de UI comunes */
+      var ICON_OK = '<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+      var ICON_FAIL = '<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>';
+      var ICON_PENDING = '<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
+      var ICON_SPIN = '<svg class="spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 1 1-8.5 8.5"/></svg>';
+      function badge(kind) {
+        switch (kind) {
+          case 'ok': return '<span class="badge badge-ok">' + ICON_OK + 'Aprobado</span>';
+          case 'fail': return '<span class="badge badge-fail">' + ICON_FAIL + 'Fallido</span>';
+          case 'pending': return '<span class="badge badge-warn">' + ICON_PENDING + 'Pendiente</span>';
+          case 'running': return '<span class="badge badge-neutral text-brand-800">' + ICON_SPIN + 'Ejecutando</span>';
+          case 'queued': return '<span class="badge badge-neutral">En cola</span>';
+          case 'done': return '<span class="badge badge-neutral">Finalizada</span>';
+          case 'live': return '<span class="badge badge-neutral text-brand-800">' + ICON_SPIN + 'En curso</span>';
+        }
+      }
+      function show(el, on) { el.classList.toggle('demo-hidden', !on); }
+      function fade(el, on) { el.classList.toggle('is-hidden', !on); }
+      function scrollPanelTo(panel, el) {
+        var p = panel.getBoundingClientRect(), r = el.getBoundingClientRect();
+        if (r.bottom > p.bottom - 12) panel.scrollTo({ top: panel.scrollTop + r.bottom - p.bottom + 16, behavior: reduceMotion ? 'auto' : 'smooth' });
+        else if (r.top < p.top) panel.scrollTo({ top: panel.scrollTop + r.top - p.top - 16, behavior: reduceMotion ? 'auto' : 'smooth' });
+      }
+
+      /* Cursor simulado */
+      function moveCursor(el, id) {
+        var s = stage.getBoundingClientRect(), r = el.getBoundingClientRect();
+        cursor.style.transform = 'translate(' + (r.left - s.left + r.width * 0.55) + 'px,' + (r.top - s.top + r.height * 0.55) + 'px)';
+        cursor.style.opacity = '1';
+        return sleep(800, id);
+      }
+      function click(el, id) {
+        cursor.classList.add('is-click'); el.classList.add('is-pressed');
+        return sleep(220, id).then(function () { cursor.classList.remove('is-click'); el.classList.remove('is-pressed'); });
+      }
+      function hideCursor() { cursor.style.opacity = '0'; }
+
+      /* --- Paso 1: historia --- */
+      var storyText = $('#story-text'), storyCaret = $('#story-caret'), storyBtn = $('#story-btn'), storyStatus = $('#story-status');
+      var step1 = {
+        reset: function () { storyText.textContent = ''; show(storyCaret, true); show(storyStatus, false); },
+        final: function () { storyText.textContent = STORY; show(storyCaret, false); show(storyStatus, false); },
+        play: function (id) {
+          var i = 0;
+          function type() {
+            if (i >= STORY.length) return Promise.resolve();
+            i = Math.min(STORY.length, i + 2);
+            storyText.textContent = STORY.slice(0, i);
+            return sleep(26, id).then(type);
+          }
+          return sleep(500, id).then(type)
+            .then(function () { show(storyCaret, false); return sleep(500, id); })
+            .then(function () { return moveCursor(storyBtn, id); })
+            .then(function () { return click(storyBtn, id); })
+            .then(function () { hideCursor(); show(storyStatus, true); return sleep(1600, id); });
+        }
+      };
+
+      /* --- Paso 2: casos Gherkin --- */
+      var casesPanel = panels[1], cases = $$('[data-case]', casesPanel), casesValid = $('#cases-valid');
+      var step2 = {
+        reset: function () { cases.forEach(function (c) { fade(c, false); }); fade(casesValid, false); casesPanel.scrollTop = 0; },
+        final: function () { cases.forEach(function (c) { fade(c, true); }); fade(casesValid, true); },
+        play: function (id) {
+          var chain = sleep(500, id);
+          cases.forEach(function (c) {
+            chain = chain.then(function () { fade(c, true); scrollPanelTo(casesPanel, c); return sleep(1500, id); });
+          });
+          return chain.then(function () { fade(casesValid, true); casesPanel.scrollTo({ top: 0, behavior: 'smooth' }); return sleep(2200, id); });
+        }
+      };
+
+      /* --- Paso 3: revisión humana --- */
+      var reviewPanel = panels[2], reviews = $$('[data-review]', reviewPanel);
+      var editor = $('#review-editor'), newLine = $('#review-newline'), reviewCaret = $('#review-caret'),
+          reviewCheck = $('#review-check'), reviewSave = $('#review-save'), reviewEdit = $('#review-edit'),
+          reviewEdited = $('#review-edited'), reviewDone = $('#review-done');
+      function setReview(i, kind) {
+        $('[data-badge]', reviews[i]).innerHTML = badge(kind);
+        $('[data-actions]', reviews[i]).classList.toggle('hidden', kind === 'ok');
+        if (kind === 'ok') { reviews[i].classList.remove('row-flash'); void reviews[i].offsetWidth; reviews[i].classList.add('row-flash'); }
+      }
+      function approve(i, id) {
+        var btn = $('[data-approve]', reviews[i]);
+        return sleep(150, id).then(function () { scrollPanelTo(reviewPanel, btn); return sleep(300, id); })
+          .then(function () { return moveCursor(btn, id); })
+          .then(function () { return click(btn, id); })
+          .then(function () { setReview(i, 'ok'); return sleep(600, id); });
+      }
+      var step3 = {
+        reset: function () {
+          reviews.forEach(function (_, i) { setReview(i, 'pending'); reviews[i].classList.remove('row-flash'); });
+          show(editor, false); newLine.innerHTML = ''; show(reviewCaret, true); show(reviewCheck, false);
+          show(reviewEdited, false); fade(reviewDone, false); reviewPanel.scrollTop = 0;
+        },
+        final: function () {
+          reviews.forEach(function (_, i) { setReview(i, 'ok'); reviews[i].classList.remove('row-flash'); });
+          show(editor, false); newLine.innerHTML = highlightGherkin(NEW_LINE); show(reviewEdited, true); fade(reviewDone, true);
+        },
+        play: function (id) {
+          var i = 0;
+          function type() {
+            if (i >= NEW_LINE.length) return Promise.resolve();
+            i++;
+            newLine.innerHTML = highlightGherkin(NEW_LINE.slice(0, i));
+            return sleep(45, id).then(type);
+          }
+          return sleep(500, id)
+            .then(function () { return approve(0, id); })
+            .then(function () { return approve(1, id); })
+            .then(function () { return moveCursor(reviewEdit, id); })
+            .then(function () { return click(reviewEdit, id); })
+            .then(function () { hideCursor(); show(editor, true); scrollPanelTo(reviewPanel, editor); return sleep(600, id); })
+            .then(type)
+            .then(function () { show(reviewCaret, false); show(reviewCheck, true); return sleep(900, id); })
+            .then(function () { return moveCursor(reviewSave, id); })
+            .then(function () { return click(reviewSave, id); })
+            .then(function () { show(editor, false); show(reviewEdited, true); return sleep(400, id); })
+            .then(function () { return approve(2, id); })
+            .then(function () { hideCursor(); fade(reviewDone, true); scrollPanelTo(reviewPanel, reviewDone); return sleep(2200, id); });
+        }
+      };
+
+      /* --- Paso 4: script de Playwright --- */
+      var scriptCode = $('#script-code'), scriptCaret = $('#script-caret'), scriptScroll = $('#script-scroll'), scriptDone = $('#script-done');
+      var step4 = {
+        reset: function () { scriptCode.innerHTML = ''; show(scriptCaret, true); fade(scriptDone, false); scriptScroll.scrollTop = 0; },
+        final: function () { scriptCode.innerHTML = renderTokens(SCRIPT_TOKENS, SCRIPT.length); show(scriptCaret, false); fade(scriptDone, true); scriptScroll.scrollTop = 0; },
+        play: function (id) {
+          var n = 0;
+          function type() {
+            if (n >= SCRIPT.length) return Promise.resolve();
+            n = Math.min(SCRIPT.length, n + 5);
+            scriptCode.innerHTML = renderTokens(SCRIPT_TOKENS, n);
+            scriptScroll.scrollTop = scriptScroll.scrollHeight;
+            return sleep(20, id).then(type);
+          }
+          return sleep(400, id).then(type)
+            .then(function () { show(scriptCaret, false); fade(scriptDone, true); return sleep(2600, id); });
+        }
+      };
+
+      /* --- Paso 5: resultados --- */
+      var resultsPanel = panels[4], results = $$('[data-result]', resultsPanel), runStatus = $('#run-status'),
+          runError = $('#run-error'), runSummary = $('#run-summary');
+      function setResult(i, kind) {
+        var r = results[i];
+        $('[data-state]', r).innerHTML = badge(kind);
+        $('[data-time]', r).textContent = (kind === 'ok' || kind === 'fail') ? r.getAttribute('data-dur') : '—';
+      }
+      var step5 = {
+        reset: function () {
+          results.forEach(function (_, i) { setResult(i, 'queued'); });
+          runStatus.innerHTML = badge('live');
+          show(runError, false); fade(runSummary, false); resultsPanel.scrollTop = 0;
+        },
+        final: function () {
+          results.forEach(function (r, i) { setResult(i, r.getAttribute('data-ok') === 'true' ? 'ok' : 'fail'); });
+          runStatus.innerHTML = badge('done'); show(runError, true); fade(runSummary, true);
+        },
+        play: function (id) {
+          var chain = sleep(500, id);
+          results.forEach(function (r, i) {
+            var ok = r.getAttribute('data-ok') === 'true';
+            chain = chain
+              .then(function () { setResult(i, 'running'); return sleep(ok ? 1100 : 1700, id); })
+              .then(function () {
+                setResult(i, ok ? 'ok' : 'fail');
+                if (!ok) { show(runError, true); scrollPanelTo(resultsPanel, runError); }
+                return sleep(400, id);
+              });
+          });
+          return chain.then(function () {
+            runStatus.innerHTML = badge('done'); fade(runSummary, true); scrollPanelTo(resultsPanel, runSummary);
+            return sleep(4500, id);
+          });
+        }
+      };
+
+      var steps = [step1, step2, step3, step4, step5];
+
+      /* Cambia el paso visible y actualiza el indicador de progreso */
+      function showStep(i) {
+        current = i;
+        tabs.forEach(function (t, k) {
+          var active = k === i;
+          t.setAttribute('aria-selected', String(active));
+          t.setAttribute('tabindex', active ? '0' : '-1');
+          t.setAttribute('data-done', String(k < i));
+        });
+        panels.forEach(function (p, k) { p.hidden = k !== i; });
+        $$('[data-side]', stage).forEach(function (s) { s.classList.toggle('is-active', +s.getAttribute('data-side') === SIDEBAR[i]); });
+        $('#demo-counter').textContent = 'Paso ' + (i + 1) + ' de 5';
+        $('#demo-caption').textContent = CAPTIONS[i];
+        bar.style.transform = 'scaleX(' + (i / 4) + ')';
+        hideCursor();
+      }
+
+      /* Reproduce desde el paso i, en bucle */
+      function runFrom(i) {
+        var id = ++runId;
+        looping = true;
+        (function next(k) {
+          showStep(k);
+          steps[k].reset();
+          steps[k].play(id).then(function () { next((k + 1) % steps.length); }, function (e) { if (e !== CANCEL) throw e; });
+        })(i);
+      }
+
+      /* Salta a un paso: si está reproduciendo, sigue desde ahí; si no, muestra el paso completo */
+      function goTo(i) {
+        if (playing && !reduceMotion) { runFrom(i); return; }
+        runId++; looping = false;
+        showStep(i);
+        steps[i].final();
+      }
+
+      function setPlaying(p) {
+        playing = p;
+        toggle.setAttribute('aria-label', p ? 'Pausar la demo' : 'Reproducir la demo');
+        $('[data-label]', toggle).textContent = p ? 'Pausar' : 'Reproducir';
+        $('[data-icon="pause"]', toggle).classList.toggle('hidden', !p);
+        $('[data-icon="play"]', toggle).classList.toggle('hidden', p);
+        if (p && !looping) runFrom(current);
+      }
+
+      /* Tabs: clic y navegación con flechas */
+      tabs.forEach(function (t, i) {
+        t.addEventListener('click', function () { goTo(i); });
+        t.addEventListener('keydown', function (e) {
+          var k = null;
+          if (e.key === 'ArrowRight') k = (i + 1) % tabs.length;
+          else if (e.key === 'ArrowLeft') k = (i - 1 + tabs.length) % tabs.length;
+          else if (e.key === 'Home') k = 0;
+          else if (e.key === 'End') k = tabs.length - 1;
+          if (k === null) return;
+          e.preventDefault(); tabs[k].focus(); goTo(k);
+        });
+      });
+      toggle.addEventListener('click', function () { setPlaying(!playing); });
+
+      /* Movimiento reducido: tabs estáticas con cada paso completo, sin reproducción automática */
+      if (reduceMotion) {
+        toggle.hidden = true;
+        showStep(0);
+        steps[0].final();
+        return;
+      }
+
+      /* Estado inicial: paso 1 vacío; arranca recién cuando la demo entra en pantalla */
+      showStep(0);
+      steps[0].reset();
+      if (!('IntersectionObserver' in window)) { visible = true; runFrom(0); return; }
+      var started = false;
+      new IntersectionObserver(function (entries) {
+        visible = entries[0].isIntersecting;
+        if (visible && !started) { started = true; runFrom(0); }
+      }, { threshold: 0.35 }).observe(stage);
+    }
+
+    /* ---------- Formulario de acceso (solo visual) ---------- */
+    function initForm() {
+      var form = $('#form-acceso'), success = $('#form-exito');
+      var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+      var fields = [
+        { el: $('#f-nombre'), check: function (v) { return v.trim() ? '' : 'Ingresa tu nombre.'; } },
+        { el: $('#f-email'), check: function (v) {
+            if (!v.trim()) return 'Ingresa tu email de trabajo.';
+            return EMAIL_RE.test(v.trim()) ? '' : 'Ingresa un email válido, por ejemplo nombre@empresa.com.';
+          } },
+        { el: $('#f-rol'), check: function (v) { return v ? '' : 'Selecciona tu rol.'; } }
+      ];
+      var submitted = false;
+
+      function validate(f) {
+        var msg = f.check(f.el.value);
+        var err = document.getElementById(f.el.id + '-error');
+        f.el.setAttribute('aria-invalid', msg ? 'true' : 'false');
+        err.hidden = !msg;
+        err.innerHTML = msg
+          ? '<svg class="mt-0.5 h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v4.5M12 15.5v.01"/></svg><span>' + msg + '</span>'
+          : '';
+        return !msg;
+      }
+
+      fields.forEach(function (f) {
+        var ev = f.el.tagName === 'SELECT' ? 'change' : 'input';
+        f.el.addEventListener(ev, function () { if (submitted) validate(f); });
+        f.el.addEventListener('blur', function () { if (submitted || f.el.value) validate(f); });
+      });
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        submitted = true;
+        var firstInvalid = null;
+        fields.forEach(function (f) { if (!validate(f) && !firstInvalid) firstInvalid = f.el; });
+        if (firstInvalid) { firstInvalid.focus(); return; }
+
+        // TODO: conectar con backend (enviar nombre, email, empresa y rol a un endpoint real).
+
+        form.hidden = true;
+        success.hidden = false;
+        success.focus();
+      });
+    }
+
+    /* ---------- Arranque ---------- */
+    initHighlight();
+    initNavbar();
+    initMobileMenu();
+    initReveal();
+    initAccordion();
+    initDemo();
+    initForm();
+  })();
+  </script>
+</body>
+</html>
