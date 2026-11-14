@@ -54,6 +54,16 @@ def porcentaje(valor: float | None) -> str:
     return "—" if valor is None else f"{valor:g} %".replace(".", ",")
 
 
+def resultado_ejecucion(ejecucion: dict) -> str:
+    """Resumen corto: '3 de 4 aprobados · 75 %', 'En curso' o 'Error'."""
+    if ejecucion["estado"] == "finalizada":
+        return (
+            f"{ejecucion['aprobados']} de {ejecucion['total']} aprobados · "
+            f"{porcentaje(ejecucion['porcentaje_exito'])}"
+        )
+    return ESTADOS_EJECUCION.get(ejecucion["estado"], ejecucion["estado"])
+
+
 def etiqueta_ejecucion(ejecucion: dict) -> str:
     estado = ESTADOS_EJECUCION.get(ejecucion["estado"], ejecucion["estado"])
     historia = ejecucion["historia"]

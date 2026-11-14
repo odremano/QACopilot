@@ -21,11 +21,12 @@ class CasoReferencia(BaseModel):
     titulo: str
 
 
-class EjecucionSalida(BaseModel):
+class EjecucionResumen(BaseModel):
+    """Totales de una ejecución, sin la historia (se usa como última ejecución de cada una)."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    historia: HistoriaReferencia
     estado: EstadoEjecucion
     iniciada_en: datetime
     finalizada_en: datetime | None
@@ -40,6 +41,10 @@ class EjecucionSalida(BaseModel):
         if self.estado != EstadoEjecucion.FINALIZADA or not self.total:
             return None
         return round(self.aprobados * 100 / self.total, 1)
+
+
+class EjecucionSalida(EjecucionResumen):
+    historia: HistoriaReferencia
 
 
 class ResultadoSalida(BaseModel):
