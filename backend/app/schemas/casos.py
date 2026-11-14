@@ -47,7 +47,9 @@ class CasoSalida(BaseModel):
         return valor or []
 
 
-class GeneracionSalida(BaseModel):
+class GeneracionResumen(BaseModel):
+    """Ítem del historial de generaciones (RF-12)."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -59,14 +61,13 @@ class GeneracionSalida(BaseModel):
     duracion_ms: int | None
     mensaje_error: str | None
     creada_en: datetime
+    casos_validos: int | None = Field(
+        description="Casos válidos al momento de generar; nulo en generaciones anteriores a S6."
+    )
+    casos_invalidos: int | None = Field(
+        description="Casos inválidos al momento de generar; nulo en generaciones anteriores a S6."
+    )
+
+
+class GeneracionSalida(GeneracionResumen):
     casos: list[CasoSalida] = Field(description="Casos creados por esta generación.")
-
-    @computed_field
-    @property
-    def casos_validos(self) -> int:
-        return sum(caso.valido for caso in self.casos)
-
-    @computed_field
-    @property
-    def casos_invalidos(self) -> int:
-        return sum(not caso.valido for caso in self.casos)

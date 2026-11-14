@@ -273,6 +273,66 @@ def test_si_la_regeneracion_falla_los_casos_anteriores_se_conservan(
     assert len(client.get(f"/historias/{historia_id}/casos").json()) == 3
 
 
+# --- Historial de generaciones (CA-12) --------------------------------------
+
+
+def _historial(client, historia_id: int):
+    return client.get(f"/historias/{historia_id}/generaciones")
+
+
+def test_historial_muestra_generaciones_correctas_y_fallidas(client, usar_proveedor, historia_id):
+    usar_proveedor(VALIDA, ErrorProveedor("El proveedor no respondió"))
+    _generar(client, historia_id)
+    _generar(client, historia_id)
+
+    respuesta = _historial(client, historia_id)
+
+    assert respuesta.status_code == 200
+    fallida, correcta = respuesta.json()
+    assert (fallida["id"], fallida["estado"]) == (2, "error")
+    assert fallida["mensaje_error"] == "El proveedor no respondió"
+    assert (fallida["casos_validos"], fallida["casos_invalidos"]) == (0, 0)
+    assert (correcta["id"], correcta["estado"]) == (1, "ok")
+    assert (correcta["proveedor"], correcta["modelo"], correcta["version_prompt"]) == (
+        "falso",
+        "modelo-falso",
+        "v1",
+    )
+    assert correcta["duracion_ms"] is not None
+    assert correcta["creada_en"]
+    assert (correcta["casos_validos"], correcta["casos_invalidos"]) == (2, 1)
+    assert "casos" not in correcta
+    assert "respuesta_cruda" not in correcta
+
+
+def test_el_historial_conserva_el_conteo_aunque_se_regenere(client, usar_proveedor, historia_id):
+    """Regenerar borra los pendientes de la primera generación, pero no su conteo."""
+    usar_proveedor(VALIDA, VALIDA)
+    _generar(client, historia_id)
+    _generar(client, historia_id)
+
+    conteos = [
+        (g["casos_validos"], g["casos_invalidos"]) for g in _historial(client, historia_id).json()
+    ]
+
+    assert conteos == [(2, 1), (2, 1)]
+
+
+def test_historial_solo_de_la_historia_pedida(client, usar_proveedor, historia_id):
+    otra_id = client.post("/historias", json=HISTORIA).json()["id"]
+    usar_proveedor(VALIDA)
+    _generar(client, otra_id)
+
+    assert _historial(client, historia_id).json() == []
+
+
+def test_historial_de_historia_inexistente(client):
+    respuesta = _historial(client, 999)
+
+    assert respuesta.status_code == 404
+    assert respuesta.json() == {"detalle": "La historia HU-999 no existe"}
+
+
 # --- Límite diario (RNF-08) ------------------------------------------------
 
 

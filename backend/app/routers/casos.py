@@ -2,7 +2,7 @@ from fastapi import APIRouter, status
 
 from app.catalogo import CatalogoActual
 from app.db import DbSession
-from app.schemas.casos import CasoEdicion, CasoSalida, GeneracionSalida
+from app.schemas.casos import CasoEdicion, CasoSalida, GeneracionResumen, GeneracionSalida
 from app.schemas.errores import ErrorDetalle
 from app.services import casos as servicio_casos
 from app.services import generaciones as servicio_generaciones
@@ -40,6 +40,21 @@ def generar(
     historia_id: int, db: DbSession, proveedor: Proveedor, catalogo: CatalogoActual
 ) -> GeneracionSalida:
     return servicio_generaciones.generar_casos(db, historia_id, proveedor, catalogo)
+
+
+@router.get(
+    "/historias/{historia_id}/generaciones",
+    response_model=list[GeneracionResumen],
+    summary="Historial de generaciones",
+    description=(
+        "Devuelve las generaciones de la historia, de la más reciente a la más antigua, con "
+        "proveedor, modelo, versión del prompt, duración, resultado y cantidad de casos válidos "
+        "e inválidos (RF-12). Incluye las generaciones fallidas con su mensaje de error."
+    ),
+    responses=HISTORIA_NO_ENCONTRADA,
+)
+def historial(historia_id: int, db: DbSession) -> list[GeneracionResumen]:
+    return servicio_generaciones.listar_generaciones(db, historia_id)
 
 
 @router.get(
