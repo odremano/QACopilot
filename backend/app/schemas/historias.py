@@ -10,6 +10,8 @@ from pydantic import (
     field_validator,
 )
 
+from app.schemas.ejecuciones import EjecucionResumen
+
 Titulo = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
 TextoObligatorio = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
@@ -48,6 +50,9 @@ class HistoriaBase(BaseModel):
     creada_en: datetime
     actualizada_en: datetime
     resumen_casos: ResumenCasos = ResumenCasos()
+    ultima_ejecucion: EjecucionResumen | None = Field(
+        default=None, description="La ejecución más reciente de la historia, si tiene alguna."
+    )
 
     @computed_field
     @property

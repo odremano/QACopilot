@@ -3,7 +3,8 @@ from datetime import datetime
 import pytest
 from sqlalchemy import func, select
 
-from app.models import CasoPrueba, HistoriaUsuario
+from app.models import CasoPrueba, Ejecucion, HistoriaUsuario
+from app.models.estados import EstadoEjecucion
 from app.seed import HISTORIAS_EJEMPLO, cargar_ejemplos
 
 HISTORIA_VALIDA = {
@@ -135,6 +136,34 @@ def test_listar_ordena_por_actualizacion_descendente(client):
     assert ids == [primera, segunda]
 
 
+def test_listar_sin_ejecuciones_devuelve_ultima_ejecucion_nula(client):
+    crear(client)
+
+    assert client.get("/historias").json()[0]["ultima_ejecucion"] is None
+
+
+def test_listar_incluye_la_ultima_ejecucion_de_cada_historia(client, db):
+    """CA-09: por historia, el resultado de su última ejecución."""
+    historia_id = crear(client).json()["id"]
+    otra_id = crear(client, titulo="Otra").json()["id"]
+    finalizada = {"estado": EstadoEjecucion.FINALIZADA, "total": 4}
+    db.add(Ejecucion(historia_id=historia_id, **finalizada, aprobados=1, fallidos=3))
+    db.add(Ejecucion(historia_id=historia_id, **finalizada, aprobados=3, fallidos=1))
+    db.add(Ejecucion(historia_id=otra_id, estado=EstadoEjecucion.EN_CURSO, total=2))
+    db.commit()
+
+    ultimas = {h["id"]: h["ultima_ejecucion"] for h in client.get("/historias").json()}
+
+    assert ultimas[historia_id]["id"] == 2
+    assert ultimas[historia_id]["estado"] == "finalizada"
+    assert (ultimas[historia_id]["aprobados"], ultimas[historia_id]["fallidos"]) == (3, 1)
+    assert ultimas[historia_id]["porcentaje_exito"] == 75.0
+    assert "log" not in ultimas[historia_id]
+    assert ultimas[otra_id]["id"] == 3
+    assert ultimas[otra_id]["estado"] == "en_curso"
+    assert ultimas[otra_id]["porcentaje_exito"] is None
+
+
 def test_obtener_historia(client):
     historia_id = crear(client).json()["id"]
 
@@ -142,6 +171,17 @@ def test_obtener_historia(client):
 
     assert respuesta.status_code == 200
     assert respuesta.json()["criterios_aceptacion"] == HISTORIA_VALIDA["criterios_aceptacion"]
+
+
+def test_obtener_historia_incluye_la_ultima_ejecucion(client, db):
+    historia_id = crear(client).json()["id"]
+    db.add(Ejecucion(historia_id=historia_id, estado=EstadoEjecucion.ERROR, total=1))
+    db.commit()
+
+    ultima = client.get(f"/historias/{historia_id}").json()["ultima_ejecucion"]
+
+    assert ultima["estado"] == "error"
+    assert ultima["porcentaje_exito"] is None
 
 
 def test_obtener_inexistente_devuelve_404_con_detalle(client):
