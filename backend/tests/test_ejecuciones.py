@@ -212,6 +212,29 @@ def test_caso_fallido_con_su_error_y_su_captura(client, runner, aprobar):
     assert captura.content == PNG
 
 
+def test_regenerar_no_borra_los_resultados_de_ejecuciones_pasadas(
+    client, runner, aprobar, monkeypatch
+):
+    """RF-11: los pendientes se reemplazan, pero sus resultados ya registrados se conservan."""
+    aprobar(BLOQUEADO)
+    aprobar(TOTAL_INCORRECTO)
+    _iniciar(client)
+    for caso_id in (1, 2):
+        client.post(f"/casos/{caso_id}/pendiente")
+    monkeypatch.setattr(settings, "llm_provider", "demo")  # «Inicio de sesión» tiene respuesta
+
+    assert client.post("/historias/1/generaciones").status_code == 201
+
+    assert not {1, 2} & {c["id"] for c in client.get("/historias/1/casos").json()}
+    detalle = client.get("/ejecuciones/1").json()
+    assert (detalle["total"], detalle["aprobados"], detalle["fallidos"]) == (2, 1, 1)
+    aprobado, fallido = detalle["resultados"]
+    assert aprobado["caso"] is None and fallido["caso"] is None
+    assert (aprobado["estado"], fallido["estado"]) == ("aprobado", "fallido")
+    assert fallido["mensaje_error"].startswith("Falló el paso")
+    assert client.get(fallido["url_captura"]).content == PNG
+
+
 def test_un_caso_que_no_aparece_en_el_reporte_queda_omitido(client, runner, aprobar):
     aprobar(BLOQUEADO)
     aprobar(TOTAL_INCORRECTO)
