@@ -185,3 +185,45 @@ Se completa al cierre de cada semana del plan de trabajo (spec, sección 11).
   - Historial de generaciones (RF-12).
   - Revisión del modo demo (RF-10) y de la regeneración (RF-11), que ya están implementados.
   - Limpieza de evidencias viejas.
+
+---
+
+## S6 · 09/11 – 15/11
+
+**Fecha de registro:** 14/11/2026
+
+### Hecho
+- **RF-09 · Panel completo:**
+  - `GET /historias` y `GET /historias/{id}` incluyen `ultima_ejecucion` con sus totales y el porcentaje de éxito.
+  - El Panel muestra una tabla por historia con los casos por estado y el resultado de su última ejecución, y otra con las últimas 10 ejecuciones con aprobados, fallidos, omitidos y % de éxito (CA-09). Las filas llevan al Detalle o a la ejecución.
+- **RF-12 · Historial de generaciones:**
+  - `GET /historias/{id}/generaciones` devuelve cada generación, también las fallidas, con fecha, proveedor, modelo, versión del prompt, duración, resultado, error y cantidad de casos válidos e inválidos (CA-12).
+  - En el Detalle aparece el desplegable «Historial de generaciones».
+- **Revisión de RF-10 y RF-11:** se agregaron pruebas para cada criterio y no aparecieron fallas en el código.
+  - CA-11 tal cual lo escribe la spec: con 2 aprobados y 3 pendientes, al regenerar los aprobados se conservan y los pendientes se reemplazan.
+  - CA-10: el modo demo genera sin hacer pedidos HTTP.
+  - RF-10: las respuestas pregrabadas pasan por la misma validación que las del LLM.
+- **Corrección en RF-11:** regenerar ya no borra los resultados de ejecuciones pasadas (ver Problemas).
+- Dos migraciones nuevas: `94ce088fe468` (conteo de casos por generación) y `d0d7069ccc61` (`resultado_caso.caso_id` con `ON DELETE SET NULL`). `alembic check` queda limpio y los downgrades se probaron.
+- 197 pruebas de pytest, 11 más que en S5.
+- La interfaz se recorrió con Playwright: el Panel con datos reales, el historial con generaciones correctas y fallidas en modo demo, y una ejecución real contra SauceDemo seguida de una regeneración.
+- Se actualizaron el diagrama de clases, la secuencia de la generación, el README y la checklist de despliegue.
+- Con esto quedan implementados todos los requerimientos Must y Should de la spec.
+
+### Problemas
+- **Resultados perdidos al regenerar:** si un caso se aprobó, se ejecutó y volvió a pendiente, regenerar lo borraba. El `ON DELETE CASCADE` de `resultado_caso` también borraba sus resultados, y la ejecución quedaba con totales que no coincidían con sus filas y sin la captura. Se cambió a `ON DELETE SET NULL` y la pantalla muestra «Caso reemplazado al regenerar».
+- **Conteo de casos por generación:** al principio se calculaba a partir de los casos actuales, pero regenerar borra pendientes y editar revalida, así que el historial cambiaba con el tiempo. Ahora se guarda al generar.
+- **Pruebas intermitentes con SauceDemo:** la prueba de punta a punta y el spike de Playwright fallaron en 2 corridas de la suite completa, en semanas distintas del código. Solas pasan siempre y en la corrida con tracebacks no se repitió. Se atribuye a la red o a la latencia hacia SauceDemo. Antes de tomar una falla de esas dos como regresión, se repiten.
+- SQLAlchemy 2.1 marca como deprecado `.distinct(columna)` para `DISTINCT ON`. Se usa `postgresql.distinct_on`.
+- En la prueba de «sin red» del modo demo no se puede reemplazar `httpx.Client.send`, porque el `TestClient` de FastAPI hereda de `httpx.Client`. Se bloquea el transporte real (`httpx.HTTPTransport`).
+
+### Decisiones
+- **La última ejecución viaja con cada historia** en lugar de cruzar historias y ejecuciones en el frontend. Sale en la misma consulta del resumen con un `DISTINCT ON` y no trae el log.
+- **El conteo de válidos e inválidos se guarda en `generacion`** (dos columnas nuevas). Las generaciones anteriores quedan en nulo y se muestran vacías, porque recalcularlas daría números falsos.
+- **Conservar los resultados con el caso en nulo** en lugar de no borrar los pendientes ejecutados: respeta la regla de RF-11 («los pendientes previos se reemplazan») y no altera el historial de ejecuciones. La copia del `.spec.ts` en las evidencias sigue mostrando qué se ejecutó.
+- **Limpieza de evidencias pospuesta:** no la pide la spec y con lo medido en S5 (unos 110 KB por ejecución con captura) el volumen no es un riesgo durante la demo.
+
+### Próximo
+- Probar en producción con la checklist de [`docs/deploy-dokploy.md`](deploy-dokploy.md), incluido el flujo de S5 (exportar, ejecutar y ver una captura) que quedó pendiente.
+- Congelamiento de funcionalidades el 22/11. Hasta entonces, mejoras de interfaz y el nombre definitivo de la aplicación.
+- S7: pruebas, corrección de errores, presentaciones y demo pregrabada.

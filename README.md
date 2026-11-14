@@ -117,6 +117,12 @@ El catálogo no se edita desde la interfaz (spec 3.3).
 
 Para correr un archivo exportado fuera de la aplicación alcanza con un proyecto de Playwright con `baseURL: 'https://www.saucedemo.com'`.
 
+## Panel e historial
+
+- **Panel** (RF-09): métricas generales, una tabla por historia con los casos por estado y el resultado de su última ejecución, y las últimas ejecuciones con aprobados, fallidos, omitidos y % de éxito. Las filas llevan al Detalle o a la ejecución. Los datos salen de `GET /historias`, que incluye `ultima_ejecucion`, y de `GET /ejecuciones`.
+- **Historial de generaciones** (RF-12, desplegable en el Detalle, `GET /historias/{id}/generaciones`): fecha, proveedor, modelo, versión del prompt, duración, resultado y casos válidos e inválidos de cada generación, incluidas las fallidas.
+- **Regenerar** (RF-11): reemplaza los casos pendientes y conserva los aprobados y descartados. Si un pendiente ya se había ejecutado, sus resultados quedan en esa ejecución como «Caso reemplazado al regenerar».
+
 ## Estructura del repositorio
 
 ```
@@ -155,7 +161,7 @@ Para correr un archivo exportado fuera de la aplicación alcanza con un proyecto
 | S3 | Repositorio, Docker Compose, modelo de datos, historias (RF-01), esqueleto de pantallas, spike de Playwright, UML iniciales | ✅ Hecho |
 | S4 | Catálogo de pasos, integración con DeepSeek (vía OpenRouter), generación, validación y revisión humana | ✅ Hecho |
 | S5 | Generador TypeScript, runner de Playwright, resultados con capturas | ✅ Hecho |
-| S6 | Panel y reportes, modo demo, regeneración, historial, Cloudflare Access y límite diario | Pendiente (Cloudflare Access, límite diario, modo demo y regeneración adelantados en S4; últimas ejecuciones en el Panel, en S5) |
+| S6 | Panel y reportes, modo demo, regeneración, historial, Cloudflare Access y límite diario | ✅ Hecho (Cloudflare Access, límite diario, modo demo y regeneración adelantados en S4) |
 | S7 | Pruebas, corrección de errores, presentaciones y demo pregrabada | Pendiente |
 | S8 | Verificación final y defensa (26/11/2026) | Pendiente |
 
