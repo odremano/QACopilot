@@ -17,7 +17,7 @@ from app.config import settings
 from app.errors import ErrorNegocio, NoEncontrado
 from app.models import CasoPrueba, Generacion, HistoriaUsuario
 from app.models.estados import EstadoCaso, EstadoGeneracion, TipoCaso
-from app.schemas.casos import GeneracionSalida
+from app.schemas.casos import GeneracionResumen, GeneracionSalida
 from app.services.llm import ErrorProveedor, ProveedorLLM
 from app.services.prompt import VERSION_PROMPT, armar_mensajes
 from app.services.validador import CasoValidado, RespuestaInvalida, validar_respuesta
@@ -73,6 +73,8 @@ def generar_casos(
         duracion_ms=duracion_ms,
         respuesta_cruda={"intentos": intentos},
         mensaje_error=error,
+        casos_validos=sum(caso.valido for caso in casos or []),
+        casos_invalidos=sum(not caso.valido for caso in casos or []),
     )
     db.add(generacion)
     if casos is None:
@@ -105,6 +107,18 @@ def generar_casos(
     db.commit()
     db.refresh(generacion)
     return GeneracionSalida.model_validate(generacion)
+
+
+def listar_generaciones(db: Session, historia_id: int) -> list[GeneracionResumen]:
+    """Historial de generaciones de la historia, de la más reciente a la más antigua (RF-12)."""
+    if db.get(HistoriaUsuario, historia_id) is None:
+        raise NoEncontrado(f"La historia HU-{historia_id} no existe")
+    generaciones = db.scalars(
+        select(Generacion)
+        .where(Generacion.historia_id == historia_id)
+        .order_by(Generacion.id.desc())
+    )
+    return [GeneracionResumen.model_validate(generacion) for generacion in generaciones]
 
 
 def _verificar_reglas(casos: list[CasoValidado]) -> None:

@@ -1,7 +1,7 @@
 import streamlit as st
 
 from lib import api, vista_ejecuciones
-from lib.formato import etiqueta_historia, fecha
+from lib.formato import ESTADOS_GENERACION, etiqueta_historia, fecha, segundos
 from lib.vista_casos import mostrar_caso
 
 st.set_page_config(page_title="QA Copilot", layout="wide")
@@ -130,6 +130,36 @@ if boton.button(etiqueta, type="primary", key="generar"):
                 f"{generacion['casos_invalidos']} inválidos."
             )
             st.rerun()
+
+# RF-12: trazabilidad de cada pedido al LLM, incluidos los que fallaron.
+try:
+    generaciones = api.listar_generaciones(historia["id"])
+except api.ErrorApi as error:
+    st.error(error.mensaje)
+    generaciones = []
+if generaciones:
+    with st.expander(f"Historial de generaciones ({len(generaciones)})"):
+        st.dataframe(
+            [
+                {
+                    "Fecha": fecha(g["creada_en"]),
+                    "Proveedor": g["proveedor"],
+                    "Modelo": g["modelo"],
+                    "Prompt": g["version_prompt"],
+                    "Duración": segundos(g["duracion_ms"]),
+                    "Resultado": ESTADOS_GENERACION.get(g["estado"], g["estado"]),
+                    "Válidos": g["casos_validos"],
+                    "Inválidos": g["casos_invalidos"],
+                    "Error": g["mensaje_error"] or "—",
+                }
+                for g in generaciones
+            ],
+            hide_index=True,
+        )
+        st.caption(
+            "Válidos e inválidos se cuentan al generar; en generaciones anteriores a este "
+            "registro aparecen vacíos."
+        )
 
 if not casos:
     st.info("Esta historia todavía no tiene casos de prueba.")

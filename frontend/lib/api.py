@@ -130,6 +130,11 @@ def generar_casos(historia_id: int) -> dict:
     return _pedir("POST", f"/historias/{historia_id}/generaciones", timeout=TIMEOUT_GENERACION)
 
 
+def listar_generaciones(historia_id: int) -> list[dict]:
+    """Historial de generaciones de la historia, de la más reciente a la más antigua (RF-12)."""
+    return _pedir("GET", f"/historias/{historia_id}/generaciones")
+
+
 def editar_caso(caso_id: int, gherkin: str) -> dict:
     """Guarda el Gherkin de un caso pendiente; el backend lo revalida (RF-05)."""
     if not gherkin.strip():

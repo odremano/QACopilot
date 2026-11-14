@@ -26,6 +26,7 @@ def etiqueta_caso(caso: dict) -> str:
     return f"{icono} {caso['codigo']} · {caso['titulo']} — {tipo} · {estado}"
 
 
+ESTADOS_GENERACION = {"ok": "✅ Correcta", "error": "❌ Error"}
 ESTADOS_EJECUCION = {"en_curso": "⏳ En curso", "finalizada": "Finalizada", "error": "❌ Error"}
 ESTADOS_RESULTADO = {"aprobado": "✅ Aprobado", "fallido": "❌ Fallido", "omitido": "⏭️ Omitido"}
 
