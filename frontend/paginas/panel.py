@@ -1,6 +1,6 @@
 import streamlit as st
 
-from lib import api, rutas
+from lib import api, marca, rutas
 from lib.formato import (
     ESTADOS_EJECUCION,
     duracion_ejecucion,
@@ -11,10 +11,10 @@ from lib.formato import (
 
 ULTIMAS_EJECUCIONES = 10
 
-st.set_page_config(page_title="QA Copilot", layout="wide")
+marca.configurar_pagina()
 
-st.title("QA Copilot")
-st.caption("La IA propone, el sistema valida y la persona decide.")
+st.title(marca.NOMBRE_APP)
+st.caption(marca.LEMA)
 
 try:
     historias = api.listar_historias()

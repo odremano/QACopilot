@@ -1,4 +1,6 @@
-# QA Copilot
+# Casewright
+
+> Durante el desarrollo el proyecto se llamó **QA Copilot**, nombre con el que figura en la especificación y en los identificadores técnicos (paquetes, imágenes y servicios).
 
 Aplicación web full stack que asiste a un analista QA: a partir de una historia de usuario, un LLM propone casos de prueba Gherkin en español, el sistema los valida contra un catálogo cerrado de pasos, la persona los revisa y aprueba, y se exportan a un script de Playwright (TypeScript) generado por plantillas para ejecutarlos contra [SauceDemo](https://www.saucedemo.com) y ver los resultados en un panel.
 

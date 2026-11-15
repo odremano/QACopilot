@@ -36,9 +36,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(
-    title="QA Copilot API",
+    title="Casewright API",
     description=(
-        "API de QA Copilot: generación asistida por IA de casos de prueba Gherkin y scripts "
+        "API de Casewright: generación asistida por IA de casos de prueba Gherkin y scripts "
         "de Playwright a partir de historias de usuario. "
         "**La IA propone, el sistema valida y la persona decide.**"
     ),

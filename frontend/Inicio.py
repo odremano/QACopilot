@@ -2,9 +2,10 @@
 
 import streamlit as st
 
-from lib import rutas
+from lib import marca, rutas
 
-st.set_page_config(page_title="QA Copilot", layout="wide")
+marca.configurar_pagina()
+st.logo(marca.LOGO, size="large", icon_image=marca.ISOTIPO)
 
 navegacion = st.navigation(
     [

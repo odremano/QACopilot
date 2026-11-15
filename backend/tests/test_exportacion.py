@@ -126,7 +126,7 @@ def test_cada_paso_es_un_test_step_con_el_codigo_de_su_plantilla(client, agregar
     contenido = _exportar(client).text
 
     assert contenido == (
-        "// Generado por QA Copilot para HU-1 (catálogo saucedemo v2).\n"
+        "// Generado por Casewright para HU-1 (catálogo saucedemo v2).\n"
         "// Cada paso Gherkin se traduce con la plantilla del catálogo; no editar a mano.\n"
         "import { test, expect } from '@playwright/test';\n"
         "\n"

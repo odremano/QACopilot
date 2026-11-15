@@ -1,9 +1,9 @@
 import streamlit as st
 
-from lib import api, rutas
+from lib import api, marca, rutas
 from lib.formato import fecha
 
-st.set_page_config(page_title="QA Copilot", layout="wide")
+marca.configurar_pagina()
 
 st.title("Historias de usuario")
 
