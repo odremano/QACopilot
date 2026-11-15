@@ -209,6 +209,11 @@ Se completa al cierre de cada semana del plan de trabajo (spec, sección 11).
 - La interfaz se recorrió con Playwright: el Panel con datos reales, el historial con generaciones correctas y fallidas en modo demo, y una ejecución real contra SauceDemo seguida de una regeneración.
 - Se actualizaron el diagrama de clases, la secuencia de la generación, el README y la checklist de despliegue.
 - Con esto quedan implementados todos los requerimientos Must y Should de la spec.
+- **Nombre definitivo: Casewright** (15/11).
+  - La interfaz muestra el nuevo nombre en todas las pantallas, con el isotipo como favicon y logo de la sidebar y el azul de marca (`#1F37B5`) como color principal.
+  - «Acerca de» explica el nombre.
+  - El `.spec.ts` exportado dice «Generado por Casewright» y la API se presenta como «Casewright API».
+  - La landing del producto vive en `landing/index.html` (PR aparte).
 
 ### Problemas
 - **Resultados perdidos al regenerar:** si un caso se aprobó, se ejecutó y volvió a pendiente, regenerar lo borraba. El `ON DELETE CASCADE` de `resultado_caso` también borraba sus resultados, y la ejecución quedaba con totales que no coincidían con sus filas y sin la captura. Se cambió a `ON DELETE SET NULL` y la pantalla muestra «Caso reemplazado al regenerar».
@@ -221,9 +226,13 @@ Se completa al cierre de cada semana del plan de trabajo (spec, sección 11).
 - **La última ejecución viaja con cada historia** en lugar de cruzar historias y ejecuciones en el frontend. Sale en la misma consulta del resumen con un `DISTINCT ON` y no trae el log.
 - **El conteo de válidos e inválidos se guarda en `generacion`** (dos columnas nuevas). Las generaciones anteriores quedan en nulo y se muestran vacías, porque recalcularlas daría números falsos.
 - **Conservar los resultados con el caso en nulo** en lugar de no borrar los pendientes ejecutados: respeta la regla de RF-11 («los pendientes previos se reemplazan») y no altera el historial de ejecuciones. La copia del `.spec.ts` en las evidencias sigue mostrando qué se ejecutó.
+- **Casewright: _Case_ + _-wright_** (sufijo de oficio, como en _playwright_), «el que construye casos de prueba» y un guiño a Playwright.
+  - Solo cambia el nombre visible.
+  - Los nombres técnicos (paquetes `qa-copilot-*`, imágenes, servicios de compose) y los dominios del despliegue quedan igual, para no tocar la infraestructura antes de la defensa.
+  - La spec no se modifica y sigue diciendo QA Copilot; «Acerca de» y el README lo aclaran.
 - **Limpieza de evidencias pospuesta:** no la pide la spec y con lo medido en S5 (unos 110 KB por ejecución con captura) el volumen no es un riesgo durante la demo.
 
 ### Próximo
 - Probar en producción con la checklist de [`docs/deploy-dokploy.md`](deploy-dokploy.md), incluido el flujo de S5 (exportar, ejecutar y ver una captura) que quedó pendiente.
-- Congelamiento de funcionalidades el 22/11. Hasta entonces, mejoras de interfaz y el nombre definitivo de la aplicación.
+- Congelamiento de funcionalidades el 22/11. Hasta entonces, mejoras de interfaz (el nombre definitivo ya está: Casewright).
 - S7: pruebas, corrección de errores, presentaciones y demo pregrabada.

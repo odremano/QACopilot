@@ -1,6 +1,6 @@
 import streamlit as st
 
-from lib import api, vista_ejecuciones
+from lib import api, marca, vista_ejecuciones
 from lib.formato import (
     ESTADOS_EJECUCION,
     duracion_ejecucion,
@@ -10,7 +10,7 @@ from lib.formato import (
     porcentaje,
 )
 
-st.set_page_config(page_title="QA Copilot", layout="wide")
+marca.configurar_pagina()
 
 st.title("Ejecuciones")
 st.caption("Ejecuciones contra SauceDemo con el resultado de cada caso y sus capturas.")

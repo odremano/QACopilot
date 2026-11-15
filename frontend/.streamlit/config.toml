@@ -6,6 +6,8 @@ gatherUsageStats = false
 
 [theme]
 base = "light"
+# Azul de marca de Casewright (brand-700)
+primaryColor = "#1F37B5"
 
 [client]
 toolbarMode = "minimal"

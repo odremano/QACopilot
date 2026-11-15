@@ -1,8 +1,8 @@
 import streamlit as st
 
-from lib import api
+from lib import api, marca
 
-st.set_page_config(page_title="QA Copilot", layout="wide")
+marca.configurar_pagina()
 
 st.title("Catálogo de pasos")
 st.write(

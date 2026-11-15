@@ -1,10 +1,10 @@
 import streamlit as st
 
-from lib import api, vista_ejecuciones
+from lib import api, marca, vista_ejecuciones
 from lib.formato import ESTADOS_GENERACION, etiqueta_historia, fecha, segundos
 from lib.vista_casos import mostrar_caso
 
-st.set_page_config(page_title="QA Copilot", layout="wide")
+marca.configurar_pagina()
 
 st.title("Detalle de historia")
 

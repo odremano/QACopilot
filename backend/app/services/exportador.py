@@ -58,7 +58,7 @@ def exportar_historia(db: Session, historia_id: int, catalogo: Catalogo) -> Arch
 def generar_spec(historia: HistoriaUsuario, casos: list[CasoPrueba], catalogo: Catalogo) -> str:
     # Los comentarios solo llevan códigos y la versión del catálogo, nunca texto del usuario.
     lineas = [
-        f"// Generado por QA Copilot para {historia.codigo} "
+        f"// Generado por Casewright para {historia.codigo} "
         f"(catálogo {catalogo.sut} v{catalogo.version}).",
         "// Cada paso Gherkin se traduce con la plantilla del catálogo; no editar a mano.",
         "import { test, expect } from '@playwright/test';",
