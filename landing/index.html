@@ -1156,19 +1156,33 @@ Timeout: 5000ms</pre>
       var CANCEL = {};
       var current = 0, runId = 0, playing = !reduceMotion, visible = false, looping = false;
 
+      /* Esperas suspendidas: no usan timers; se reanudan con wake() cuando cambia el estado */
+      var waiters = [];
+      function wake() {
+        var pendientes = waiters;
+        waiters = [];
+        pendientes.forEach(function (f) { f(); });
+      }
+
       /* Espera cancelable que se congela mientras la demo está pausada o fuera de pantalla */
       function sleep(ms, id) {
         return new Promise(function (resolve, reject) {
           var remaining = ms, last = performance.now();
           (function tick() {
             if (id !== runId) return reject(CANCEL);
-            var now = performance.now();
-            if (playing && visible && !document.hidden) remaining -= now - last;
-            last = now;
-            if (remaining <= 0) resolve(); else setTimeout(tick, 16);
+            if (playing && visible && !document.hidden) {
+              var now = performance.now();
+              remaining -= now - last;
+              last = now;
+              if (remaining <= 0) resolve(); else setTimeout(tick, 16);
+            } else {
+              // El tiempo suspendido no cuenta: al reanudar se mide desde ese momento.
+              waiters.push(function () { last = performance.now(); tick(); });
+            }
           })();
         });
       }
+      document.addEventListener('visibilitychange', wake);
 
       /* Elementos de UI comunes */
       var ICON_OK = '<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
@@ -1371,6 +1385,7 @@ Timeout: 5000ms</pre>
       /* Reproduce desde el paso i, en bucle */
       function runFrom(i) {
         var id = ++runId;
+        wake();  // las esperas suspendidas de la corrida anterior se cancelan
         looping = true;
         (function next(k) {
           showStep(k);
@@ -1383,6 +1398,7 @@ Timeout: 5000ms</pre>
       function goTo(i) {
         if (playing && !reduceMotion) { runFrom(i); return; }
         runId++; looping = false;
+        wake();
         showStep(i);
         steps[i].final();
       }
@@ -1394,6 +1410,7 @@ Timeout: 5000ms</pre>
         $('[data-icon="pause"]', toggle).classList.toggle('hidden', !p);
         $('[data-icon="play"]', toggle).classList.toggle('hidden', p);
         if (p && !looping) runFrom(current);
+        wake();
       }
 
       /* Tabs: clic y navegación con flechas */
@@ -1427,6 +1444,7 @@ Timeout: 5000ms</pre>
       new IntersectionObserver(function (entries) {
         visible = entries[0].isIntersecting;
         if (visible && !started) { started = true; runFrom(0); }
+        wake();
       }, { threshold: 0.35 }).observe(stage);
     }
 
