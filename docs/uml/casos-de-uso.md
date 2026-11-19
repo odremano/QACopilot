@@ -1,6 +1,6 @@
 # Diagrama de casos de uso
 
-Casos de uso del MVP de QA Copilot con sus actores (spec, secciones 2.3 y 5). Mermaid no tiene un diagrama de casos de uso nativo: se representa con un *flowchart* donde los rectángulos son actores, los óvalos son casos de uso y el recuadro es el límite del sistema.
+Casos de uso del MVP de Casewright con sus actores (spec, secciones 2.3 y 5). Mermaid no tiene un diagrama de casos de uso nativo: se representa con un *flowchart* donde los rectángulos son actores, los óvalos son casos de uso y el recuadro es el límite del sistema.
 
 ```mermaid
 flowchart LR
@@ -9,7 +9,7 @@ flowchart LR
     llm["Proveedor LLM<br/>OpenRouter (DeepSeek)<br/>(sistema externo)"]
     sut["SauceDemo<br/>(sistema externo · SUT)"]
 
-    subgraph sistema["QA Copilot"]
+    subgraph sistema["Casewright"]
         direction TB
         uc1(["Gestionar historias de usuario<br/>RF-01"])
         uc2(["Generar casos con IA<br/>RF-03 · RF-11"])
