@@ -4,7 +4,7 @@
 
 Aplicación web full stack que asiste a un analista QA: a partir de una historia de usuario, un LLM propone casos de prueba Gherkin en español, el sistema los valida contra un catálogo cerrado de pasos, la persona los revisa y aprueba, y se exportan a un script de Playwright (TypeScript) generado por plantillas para ejecutarlos contra [SauceDemo](https://www.saucedemo.com) y ver los resultados en un panel.
 
-> URL de Landing Page: https://casewright.ordema.app/#acceso
+> URL de Landing Page: https://casewright.ordema.app/
 > URL de Producto: https://qa.ordema.app/
 
 > **Principio rector: la IA propone, el sistema valida y la persona decide.** El LLM nunca escribe código ejecutable.
