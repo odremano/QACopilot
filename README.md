@@ -1,12 +1,12 @@
 # Casewright
 
-> Durante el desarrollo el proyecto se llamó **QA Copilot**, nombre con el que figura en la especificación y en los identificadores técnicos (paquetes, imágenes y servicios).
+> Durante el desarrollo el proyecto se llamó **QA Copilot**. El nombre se conserva en los identificadores técnicos (paquetes, imágenes y servicios); la especificación v1.0 ya usa Casewright.
 
 Aplicación web full stack que asiste a un analista QA: a partir de una historia de usuario, un LLM propone casos de prueba Gherkin en español, el sistema los valida contra un catálogo cerrado de pasos, la persona los revisa y aprueba, y se exportan a un script de Playwright (TypeScript) generado por plantillas para ejecutarlos contra [SauceDemo](https://www.saucedemo.com) y ver los resultados en un panel.
 
 > **Principio rector: la IA propone, el sistema valida y la persona decide.** El LLM nunca escribe código ejecutable.
 
-Proyecto final de Prácticas de Laboratorio · Tecnicatura en Programación de Computadoras · Universidad de Belgrano · 2026. La especificación completa está en [`docs/spec.md`](docs/spec.md).
+Proyecto final de Prácticas de Laboratorio · Tecnicatura en Programación de Computadoras · Universidad de Belgrano · 2026. La especificación completa (v1.0, alcance cerrado) está en [`docs/spec.md`](docs/spec.md) y en Word en [`docs/Casewright_Spec_v1.0.docx`](docs/Casewright_Spec_v1.0.docx).
 
 ## Arquitectura
 
