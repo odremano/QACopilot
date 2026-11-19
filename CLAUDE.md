@@ -4,7 +4,7 @@ App web full stack: el analista QA carga historias de usuario, un LLM propone ca
 
 ## Fuentes de verdad
 
-- Especificación: `docs/spec.md` (alcance MoSCoW, RF/CA, modelo de datos, API, pantallas). **No modificarla.**
+- Especificación v1.0 (cerrada el 19/11/2026): `docs/Casewright_Spec_v1.0.docx` es el original y `docs/spec.md` su conversión con pandoc (alcance MoSCoW, RF/CA, modelo de datos, API, pantallas). **No modificarla.** Si algún día cambia, se edita el docx y se regenera el .md.
 - Avance y decisiones: `docs/bitacora.md` (completar al cerrar cada semana).
 - Diagramas: `docs/uml/` (Mermaid). Despliegue: `docs/deploy-dokploy.md`.
 
