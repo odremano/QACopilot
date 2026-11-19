@@ -10,7 +10,7 @@ Proyecto final de Prácticas de Laboratorio · Tecnicatura en Programación de C
 
 ## Arquitectura
 
-Tres contenedores (frontend, backend y base de datos) y dos servicios externos. El frontend no accede a la base: toda la lógica vive en la API.
+Tres contenedores de la aplicación (frontend, backend y base de datos), un cuarto con la landing estática del producto y dos servicios externos. El frontend no accede a la base: toda la lógica vive en la API.
 
 ```mermaid
 flowchart LR
@@ -19,6 +19,7 @@ flowchart LR
     be -->|SQL| db[("PostgreSQL")]
     be -->|HTTPS| llm["API LLM<br/>OpenRouter (DeepSeek)"]
     be -->|HTTPS| sut["SauceDemo"]
+    vis["Visitante"] -->|"HTTPS · pública"| landing["Landing<br/>nginx, HTML estático"]
 ```
 
 Más diagramas en [`docs/uml/`](docs/uml/): [casos de uso](docs/uml/casos-de-uso.md), [clases](docs/uml/clases.md), [estados del caso](docs/uml/estados-caso.md), [secuencia de generación y revisión](docs/uml/secuencia-generacion.md), [secuencia de exportación y ejecución](docs/uml/secuencia-ejecucion.md) y [despliegue](docs/uml/despliegue.md).
@@ -32,6 +33,7 @@ Más diagramas en [`docs/uml/`](docs/uml/): [casos de uso](docs/uml/casos-de-uso
 | Base de datos | PostgreSQL 16 |
 | Automatización | Playwright Test 1.64 con TypeScript 7.0 (solo `tsc --noEmit`), Chromium headless (imagen oficial de Playwright) |
 | Calidad | pytest, ruff |
+| Landing | HTML estático con Tailwind (Play CDN) servido por nginx 1.30 |
 | Infraestructura | Docker Compose, Dokploy, Cloudflare Tunnel |
 
 Las versiones exactas están fijadas en `backend/pyproject.toml`, `frontend/pyproject.toml`, `backend/playwright/package.json` y los `Dockerfile`.
@@ -56,6 +58,7 @@ El backend espera a la base, aplica las migraciones y carga las tres historias d
 | Servicio | URL |
 |---|---|
 | Interfaz (Streamlit) | http://localhost:8501 |
+| Landing | http://localhost:8080 |
 | Documentación de la API (Swagger) | http://localhost:8000/docs |
 | Estado del servicio | http://localhost:8000/salud |
 
@@ -128,7 +131,7 @@ Para correr un archivo exportado fuera de la aplicación alcanza con un proyecto
 ## Estructura del repositorio
 
 ```
-├── docker-compose.yml        # db + backend + frontend
+├── docker-compose.yml        # db + backend + frontend + landing
 ├── Makefile                  # atajos vía docker compose
 ├── .env.example              # variables de entorno documentadas (sin secretos)
 ├── backend/
@@ -153,6 +156,7 @@ Para correr un archivo exportado fuera de la aplicación alcanza con un proyecto
 │   ├── Inicio.py             # punto de entrada y navegación
 │   ├── paginas/              # Panel, Historias, Detalle, Ejecuciones, Catálogo, Acerca de
 │   └── lib/                  # api.py (cliente HTTP único), formato y rutas
+├── landing/                  # landing pública: index.html y Dockerfile de nginx
 └── docs/                     # spec, bitácora, guía de despliegue y UML
 ```
 
