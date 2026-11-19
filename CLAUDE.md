@@ -1,4 +1,4 @@
-# CLAUDE.md · QA Copilot
+# CLAUDE.md · Casewright
 
 App web full stack: el analista QA carga historias de usuario, un LLM propone casos Gherkin en español validados contra un catálogo de pasos, la persona los revisa y aprueba, se exportan a un `.spec.ts` de Playwright generado por plantillas y se ejecutan contra SauceDemo. **La IA propone, el sistema valida y la persona decide.** Proyecto final UB, un solo desarrollador, defensa el 26/11/2026: priorizar lo simple que funcione de punta a punta.
 

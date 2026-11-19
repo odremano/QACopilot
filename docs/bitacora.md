@@ -1,4 +1,4 @@
-# Bitácora de avance · QA Copilot
+# Bitácora de avance · Casewright
 
 Registro semanal de lo hecho, los problemas encontrados y las decisiones tomadas.
 Se completa al cierre de cada semana del plan de trabajo (spec, sección 11).
@@ -236,3 +236,41 @@ Se completa al cierre de cada semana del plan de trabajo (spec, sección 11).
 - Probar en producción con la checklist de [`docs/deploy-dokploy.md`](deploy-dokploy.md), incluido el flujo de S5 (exportar, ejecutar y ver una captura) que quedó pendiente.
 - Congelamiento de funcionalidades el 22/11. Hasta entonces, mejoras de interfaz (el nombre definitivo ya está: Casewright).
 - S7: pruebas, corrección de errores, presentaciones y demo pregrabada.
+
+---
+
+## S7 · 16/11 – 22/11 (en curso)
+
+**Fecha de registro:** 19/11/2026
+
+### Hecho
+- **Especificación v1.0 cerrada** (PR #15):
+  - Pasa a llamarse Casewright y queda en «Versión final: alcance cerrado», con la fila 1.0 en el historial de versiones.
+  - Nueva sección 2.7 «Cambios durante el desarrollo», con lo que cambió respecto de la versión 0.1 y el motivo.
+  - Se ajustó a lo implementado: OpenRouter con httpx, plantillas del catálogo, formato del caso, catálogo v2, modelo de datos final, subdominios, pendientes resueltos y Claude Code como agente de código.
+  - El original es `docs/Casewright_Spec_v1.0.docx` y `docs/spec.md` es su conversión con pandoc.
+- **Landing en producción** en `casewright.ordema.app` (PR #16):
+  - Es el cuarto servicio del compose: nginx 1.30.7 sirve `landing/index.html`.
+  - Es pública: queda fuera de Cloudflare Access.
+  - La guía de despliegue, el diagrama de despliegue y el README la incluyen.
+- **Corrección en la landing:** la demo dejó de reprogramar un timer cada 16 ms mientras estaba pausada o fuera de pantalla. Medido con Playwright: de 124 llamadas en 2 s a ninguna.
+- La documentación del repositorio usa el nombre Casewright (bitácora, guía de despliegue y diagrama de casos de uso).
+- **Documentación para Google Drive:** se prepararon en PDF las presentaciones comercial y técnica, el índice de entrega y una copia de cada documento del repositorio.
+- **Revisión general:** las 197 pruebas pasan sobre `main` y ruff queda limpio.
+
+### Problemas
+- **Docx del spec:** tenía texto dañado en el paso 3 de la sección 4.4 («proyectoproyectoproyecto…»), que no estaba en `docs/spec.md`, y el índice era un campo sin calcular. Se completó con las páginas medidas sobre el documento renderizado.
+- **Rama de la landing desactualizada:** la rama del PR #13 había quedado atrás de `main` en los archivos que había que tocar. Se rehízo como PR #16 desde `main`, con el mismo commit de la landing, sin forzar la historia.
+
+### Decisiones
+- **Spec v1.0 con una sección de cambios** (2.7) en lugar de reescribir las decisiones originales: queda a la vista qué se planificó y qué se implementó. Dos pendientes de la sección 15 siguen abiertos: la comunicación al tutor y la ficha técnica.
+- **La landing es un contenedor propio dentro del mismo compose:**
+  - Streamlit no sirve HTML arbitrario en la raíz, así que no se integra al frontend.
+  - Tampoco se separa en otra aplicación de Dokploy: un único despliegue publica todo.
+  - Es pública porque no expone datos ni la API.
+- **Drive como repositorio oficial de la documentación:** ahí se publican los PDF; el repositorio conserva los `.md` como fuente y cada PDF enlaza a su original en GitHub.
+
+### Próximo
+- Demo pregrabada del flujo completo.
+- Congelamiento de funcionalidades el 22/11 y tercer encuentro.
+- S8: verificación final del despliegue y de SauceDemo, y ensayo de la defensa.

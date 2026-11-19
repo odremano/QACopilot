@@ -1,6 +1,6 @@
 # Despliegue en Dokploy
 
-Guía para desplegar QA Copilot en el servidor propio (Proxmox + Dokploy) como aplicación **Docker Compose** desde el repositorio de GitHub, publicada con **Cloudflare Tunnel** bajo `ordema.app` (RNF-02).
+Guía para desplegar Casewright en el servidor propio (Proxmox + Dokploy) como aplicación **Docker Compose** desde el repositorio de GitHub, publicada con **Cloudflare Tunnel** bajo `ordema.app` (RNF-02).
 
 > Reemplazá `<frontend>` y `<api>` por los subdominios de la interfaz y la API (en producción, `qa` y `qa-api`; spec v1.0, sección 3.1), y `<landing>` por el de la landing pública (por ejemplo, `casewright`).
 
