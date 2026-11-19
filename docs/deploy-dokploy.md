@@ -2,14 +2,14 @@
 
 Guía para desplegar QA Copilot en el servidor propio (Proxmox + Dokploy) como aplicación **Docker Compose** desde el repositorio de GitHub, publicada con **Cloudflare Tunnel** bajo `ordema.app` (RNF-02).
 
-> Reemplazá `<frontend>` y `<api>` por los subdominios elegidos (por ejemplo, `qa` y `qa-api`). La spec deja su definición como pendiente (sección 15).
+> Reemplazá `<frontend>` y `<api>` por los subdominios de la interfaz y la API (en producción, `qa` y `qa-api`; spec v1.0, sección 3.1), y `<landing>` por el de la landing pública (por ejemplo, `casewright`).
 
 ## 1. Requisitos previos
 
 - El repositorio subido a GitHub (sin `.env`: está en `.gitignore`).
 - Dokploy con acceso a la cuenta de GitHub (Settings → Git → GitHub).
 - `cloudflared` corriendo en el servidor con un túnel ya creado para `ordema.app`.
-- Dos puertos libres en el servidor para publicar el backend y el frontend. Para ver los que ya están en uso: `ss -ltnp`.
+- Tres puertos libres en el servidor para publicar el backend, el frontend y la landing. Para ver los que ya están en uso: `ss -ltnp`.
 
 ## 2. Crear la aplicación en Dokploy
 
@@ -36,6 +36,7 @@ API_PUBLIC_URL=https://<api>.ordema.app
 
 BACKEND_PORT=<puerto libre, p. ej. 18000>
 FRONTEND_PORT=<puerto libre, p. ej. 18501>
+LANDING_PORT=<puerto libre, p. ej. 18080>
 
 SEED_EXAMPLES=true
 LOG_LEVEL=INFO
@@ -69,6 +70,7 @@ En **Cloudflare Zero Trust → Networks → Tunnels → (tu túnel) → Public H
 |---|---|---|
 | `<frontend>` | `ordema.app` | `http://localhost:<FRONTEND_PORT>` |
 | `<api>` | `ordema.app` | `http://localhost:<BACKEND_PORT>` |
+| `<landing>` | `ordema.app` | `http://localhost:<LANDING_PORT>` |
 
 Si `cloudflared` corre en otra VM o contenedor, reemplazá `localhost` por la IP del servidor donde corre Dokploy.
 
@@ -78,10 +80,11 @@ Si agregás o cambiás el subdominio de la API, actualizá `API_PUBLIC_URL` en D
 
 ## 5. Checklist de verificación post-deploy
 
-- [ ] En Dokploy, los tres contenedores aparecen *running* y `backend` y `frontend` en estado *healthy*.
+- [ ] En Dokploy, los cuatro contenedores aparecen *running* y `backend`, `frontend` y `landing` en estado *healthy*.
 - [ ] `https://<api>.ordema.app/salud` responde `{"estado": "ok", "base_de_datos": "ok", ...}`.
 - [ ] `https://<api>.ordema.app/` redirige a `/docs`, que muestra Swagger con las secciones "Historias", "Casos", "Exportación", "Ejecuciones", "Catálogo" y "Salud".
 - [ ] `https://<frontend>.ordema.app` abre el Panel con **3 historias**.
+- [ ] `https://<landing>.ordema.app` abre la landing **sin pedir el inicio de sesión de Cloudflare Access**, desde una ventana privada. En el celular se ve el menú desplegable y la demo avanza sola.
 - [ ] Los logs del backend muestran las migraciones aplicadas hasta `d0d7069ccc61` (o `docker exec <contenedor-backend> alembic current` muestra esa revisión como *head*).
 - [ ] En **Historias**, dar de alta una historia nueva: aparece en el listado con su código `HU-n`.
 - [ ] Intentar guardar sin título: aparece "El título es obligatorio." y no se guarda.
@@ -98,4 +101,16 @@ Si agregás o cambiás el subdominio de la API, actualizá `API_PUBLIC_URL` en D
 
 ## 6. Cloudflare Access
 
-Está activo desde S4 (RNF-07). Una aplicación de **Cloudflare Access** cubre los dos hostnames con la política de acceso configurada en Zero Trust. No requiere cambios en el código. Si se recrea el túnel o se agrega un subdominio, hay que incluirlo en la aplicación de Access.
+Está activo desde S4 (RNF-07). Una aplicación de **Cloudflare Access** cubre los hostnames de la interfaz y la API con la política de acceso configurada en Zero Trust. No requiere cambios en el código. Si se recrea el túnel, hay que volver a incluirlos en la aplicación de Access.
+
+**La landing es pública** y no va detrás de Access: es la cara comercial del producto y no expone datos ni la API.
+
+- Si la aplicación de Access lista los hostnames uno por uno, no hay que hacer nada: el de la landing queda afuera.
+- Si usa un comodín (`*.ordema.app`), creá en **Access → Applications** una aplicación *self-hosted* solo para `<landing>.ordema.app` con una política de acción **Bypass** e *include* **Everyone**. Cloudflare aplica la aplicación con el hostname más específico, así que la landing queda abierta y el resto sigue protegido.
+
+## 7. Landing
+
+La landing (`landing/index.html`) es un HTML estático que sirve nginx en el servicio `landing` del mismo compose. Es un contenedor aparte, pero se despliega junto con los demás: un **Deploy** en Dokploy reconstruye la imagen con el `index.html` de la rama `main`. No usa variables de entorno ni volúmenes, y no depende de la base ni de la API.
+
+- Usa el CDN de Tailwind (Play CDN `3.4.17`) y Google Fonts: el navegador del visitante necesita salida a internet, no el servidor.
+- El formulario de «Solicitar acceso» es solo visual: valida los campos y muestra un mensaje, pero no envía datos a ningún lado.
